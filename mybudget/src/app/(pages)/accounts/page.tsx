@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account } from "@/lib/database-types";
@@ -20,6 +21,7 @@ const accountTypes = [
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [dialog, setDialog] = useState<"account" | "transfer" | null>(null);
@@ -46,7 +48,8 @@ export default function AccountsPage() {
         setError(
           reason instanceof Error ? reason.message : "Could not load accounts"
         )
-      );
+      )
+      .finally(() => setLoading(false));
   }, []);
 
   function openCreate() {
@@ -175,7 +178,29 @@ export default function AccountsPage() {
       ) : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {accounts.map((account) => (
+        {loading
+          ? Array.from({ length: 3 }).map((_, index) => (
+              <section
+                key={index}
+                className="overflow-hidden border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"
+              >
+                <Skeleton className="h-2 w-full" />
+                <div className="p-5 sm:p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-2.5 w-14" />
+                      <Skeleton className="h-6 w-28" />
+                    </div>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="mt-8 h-8 w-36" />
+                  <div className="mt-3 border-t border-ink/10 pt-3">
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                </div>
+              </section>
+            ))
+          : accounts.map((account) => (
           <section
             key={account.id}
             className="overflow-hidden border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"
@@ -218,7 +243,7 @@ export default function AccountsPage() {
             </div>
           </section>
         ))}
-        {accounts.length === 0 && !error ? (
+        {!loading && accounts.length === 0 && !error ? (
           <p className="text-sm text-ink-soft">No accounts yet.</p>
         ) : null}
       </div>

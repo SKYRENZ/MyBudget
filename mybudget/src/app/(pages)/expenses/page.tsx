@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account, Category, Transaction } from "@/lib/database-types";
@@ -20,6 +21,7 @@ export default function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -58,7 +60,8 @@ export default function ExpensesPage() {
       })
       .catch((reason) =>
         setError(reason instanceof Error ? reason.message : "Could not load expenses"),
-      );
+      )
+      .finally(() => setLoading(false));
   }, []);
 
   async function submitExpense() {
@@ -244,7 +247,24 @@ export default function ExpensesPage() {
       />
       {error ? <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">{error}</p> : null}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {categories.map((category) => {
+        {loading
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <section key={index} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  <Skeleton className="h-3.5 w-12" />
+                </div>
+                <Skeleton className="mt-5 h-2 w-full" />
+                <div className="mt-3 flex items-center justify-between">
+                  <Skeleton className="h-3 w-14" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </section>
+            ))
+          : categories.map((category) => {
           const spent = transactions
             .filter((row) => row.type === "expense" && row.category_id === category.id)
             .reduce((sum, row) => sum + Number(row.amount), 0);
@@ -287,9 +307,42 @@ export default function ExpensesPage() {
             </section>
           );
         })}
-        {categories.length === 0 && !error ? <p className="text-sm text-ink-soft">No categories or expenses yet.</p> : null}
+        {!loading && categories.length === 0 && !error ? <p className="text-sm text-ink-soft">No categories or expenses yet.</p> : null}
       </div>
-      <section className="mt-6 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"><div className="border-b border-ink/15 p-5"><h2 className="font-display text-xl font-bold">Transactions</h2></div><div className="overflow-x-auto"><table className="w-full min-w-162.5 text-left text-sm"><thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft"><tr><td className="px-5 py-3">Description</td><td>Type</td><td>Category</td><td>Account</td><td>Date</td><td className="px-5 text-right">Amount</td></tr></thead><tbody>{transactions.map((row)=><tr key={row.id} className="border-t border-ink/10"><td className="px-5 py-4 font-bold">{row.description || (row.type === "income" ? "Income" : "Expense")}</td><td className="uppercase text-[0.62rem] tracking-[0.12em] text-ink-soft">{row.type}</td><td>{row.categories?.name || "—"}</td><td>{row.accounts?.name || "—"}</td><td>{row.transaction_date}</td><td className="px-5 text-right font-bold">{row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}{formatCurrency(Number(row.amount))}</td></tr>)}</tbody></table>{transactions.length===0&&!error?<p className="p-5 text-sm text-ink-soft">No transactions yet.</p>:null}</div></section>
+      <section className="mt-6 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]">
+        <div className="border-b border-ink/15 p-5"><h2 className="font-display text-xl font-bold">Transactions</h2></div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-162.5 text-left text-sm">
+            <thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft">
+              <tr><td className="px-5 py-3">Description</td><td>Type</td><td>Category</td><td>Account</td><td>Date</td><td className="px-5 text-right">Amount</td></tr>
+            </thead>
+            <tbody>
+              {loading
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <tr key={index} className="border-t border-ink/10">
+                      <td className="px-5 py-4"><Skeleton className="h-4 w-32" /></td>
+                      <td><Skeleton className="h-3 w-14" /></td>
+                      <td><Skeleton className="h-3.5 w-20" /></td>
+                      <td><Skeleton className="h-3.5 w-20" /></td>
+                      <td><Skeleton className="h-3.5 w-20" /></td>
+                      <td className="px-5 text-right"><Skeleton className="ml-auto h-4 w-20" /></td>
+                    </tr>
+                  ))
+                : transactions.map((row) => (
+                    <tr key={row.id} className="border-t border-ink/10">
+                      <td className="px-5 py-4 font-bold">{row.description || (row.type === "income" ? "Income" : "Expense")}</td>
+                      <td className="uppercase text-[0.62rem] tracking-[0.12em] text-ink-soft">{row.type}</td>
+                      <td>{row.categories?.name || "—"}</td>
+                      <td>{row.accounts?.name || "—"}</td>
+                      <td>{row.transaction_date}</td>
+                      <td className="px-5 text-right font-bold">{row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}{formatCurrency(Number(row.amount))}</td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
+          {!loading && transactions.length === 0 && !error ? <p className="p-5 text-sm text-ink-soft">No transactions yet.</p> : null}
+        </div>
+      </section>
       {showExpenseForm ? (
         <div
           className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-5"

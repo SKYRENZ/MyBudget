@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account, FinancialGoal, SavingsGoal } from "@/lib/database-types";
@@ -18,6 +19,7 @@ export default function SavingsPage() {
   const [savings, setSavings] = useState<SavingsGoal[]>([]);
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialog, setDialog] = useState<PlanningDialog>(null);
   const [editingSaving, setEditingSaving] = useState<SavingsGoal | null>(null);
   const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
@@ -60,7 +62,8 @@ export default function SavingsPage() {
       })
       .catch((reason) =>
         setError(reason instanceof Error ? reason.message : "Could not load planning"),
-      );
+      )
+      .finally(() => setLoading(false));
   }, []);
 
   function resetFormFields() {
@@ -274,60 +277,97 @@ export default function SavingsPage() {
       <section className="mt-6">
         <div className="mb-4"><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Cash reserves</p><h2 className="mt-1 font-display text-2xl font-bold">Savings funds</h2></div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {savings.map((goal) => {
-            const target = Number(goal.target_amount);
-            const saved = Number(goal.current_amount);
-            const percent = target > 0 ? Number(((saved / target) * 100).toFixed(2)) : 0;
-            return (
-              <article key={goal.id} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft">{goal.status}</p>
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => openEditSavings(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink dark:hover:text-white">Edit</button>
-                    <button type="button" onClick={() => archiveSavingGoal(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink dark:hover:text-white">{goal.status === "archived" ? "Restore" : "Archive"}</button>
-                    <button type="button" onClick={() => setDeleteTarget({ kind: "savings", item: goal })} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-red-700 hover:text-red-900 dark:text-red-400">Delete</button>
+          {loading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <article key={index} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+                  <div className="flex items-start justify-between gap-2">
+                    <Skeleton className="h-2.5 w-14" />
+                    <Skeleton className="h-2.5 w-24" />
                   </div>
-                </div>
-                <h3 className="mt-3 font-display text-2xl font-bold">{goal.name}</h3>
-                <p className="mt-5 text-3xl font-bold">{formatCurrency(saved)}</p>
-                <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
-                <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
-                <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Monthly</p><b>{formatCurrency(Number(goal.monthly_contribution))}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - saved, 0))}</b></div></div>
-              </article>
-            );
-          })}
-          {savings.length === 0 ? <p className="text-sm text-ink-soft">No savings funds yet.</p> : null}
+                  <Skeleton className="mt-3 h-7 w-36" />
+                  <Skeleton className="mt-5 h-8 w-32" />
+                  <Skeleton className="mt-2 h-3 w-28" />
+                  <Skeleton className="mt-5 h-2 w-full" />
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4">
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="ml-auto h-6 w-20" />
+                  </div>
+                </article>
+              ))
+            : savings.map((goal) => {
+                const target = Number(goal.target_amount);
+                const saved = Number(goal.current_amount);
+                const percent = target > 0 ? Number(((saved / target) * 100).toFixed(2)) : 0;
+                return (
+                  <article key={goal.id} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft">{goal.status}</p>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => openEditSavings(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink dark:hover:text-white">Edit</button>
+                        <button type="button" onClick={() => archiveSavingGoal(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink dark:hover:text-white">{goal.status === "archived" ? "Restore" : "Archive"}</button>
+                        <button type="button" onClick={() => setDeleteTarget({ kind: "savings", item: goal })} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-red-700 hover:text-red-900 dark:text-red-400">Delete</button>
+                      </div>
+                    </div>
+                    <h3 className="mt-3 font-display text-2xl font-bold">{goal.name}</h3>
+                    <p className="mt-5 text-3xl font-bold">{formatCurrency(saved)}</p>
+                    <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
+                    <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
+                    <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Monthly</p><b>{formatCurrency(Number(goal.monthly_contribution))}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - saved, 0))}</b></div></div>
+                  </article>
+                );
+              })}
+          {!loading && savings.length === 0 ? <p className="text-sm text-ink-soft">No savings funds yet.</p> : null}
         </div>
       </section>
 
       <section className="mt-10">
         <div className="mb-4"><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Life milestones</p><h2 className="mt-1 font-display text-2xl font-bold">Long-term goals</h2></div>
         <div className="grid gap-4 lg:grid-cols-2">
-          {goals.map((goal) => {
-            const target = Number(goal.target_amount || 0);
-            const current = Number(goal.current_amount || 0);
-            const percent = target > 0 ? Number(((current / target) * 100).toFixed(2)) : 0;
-            return (
-            <article key={goal.id} className="border border-ink/15 bg-paper p-5 sm:p-6 dark:border-white/10 dark:bg-[#211b17]">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ember-deep">{goal.priority} priority</p>
-                  <h3 className="mt-2 font-display text-2xl font-bold">{goal.name}</h3>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => openEditGoal(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink dark:hover:text-white">Edit</button>
-                  <button type="button" onClick={() => setDeleteTarget({ kind: "goal", item: goal })} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-red-700 hover:text-red-900 dark:text-red-400">Delete</button>
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-ink-soft">{goal.description || "No description"}</p>
-              <p className="mt-5 text-3xl font-bold">{formatCurrency(current)}</p>
-              <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
-              <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
-              <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Deadline</p><b>{goal.deadline || "Not set"}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - current, 0))}</b></div></div>
-            </article>
-            );
-          })}
-          {goals.length === 0 ? <p className="text-sm text-ink-soft">No long-term goals yet.</p> : null}
+          {loading
+            ? Array.from({ length: 2 }).map((_, index) => (
+                <article key={index} className="border border-ink/15 bg-paper p-5 sm:p-6 dark:border-white/10 dark:bg-[#211b17]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-2">
+                      <Skeleton className="h-2.5 w-24" />
+                      <Skeleton className="h-7 w-44" />
+                    </div>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="mt-3 h-4 w-64" />
+                  <Skeleton className="mt-5 h-8 w-36" />
+                  <Skeleton className="mt-2 h-3 w-28" />
+                  <Skeleton className="mt-5 h-2 w-full" />
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="ml-auto h-6 w-24" />
+                  </div>
+                </article>
+              ))
+            : goals.map((goal) => {
+                const target = Number(goal.target_amount || 0);
+                const current = Number(goal.current_amount || 0);
+                const percent = target > 0 ? Number(((current / target) * 100).toFixed(2)) : 0;
+                return (
+                <article key={goal.id} className="border border-ink/15 bg-paper p-5 sm:p-6 dark:border-white/10 dark:bg-[#211b17]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ember-deep">{goal.priority} priority</p>
+                      <h3 className="mt-2 font-display text-2xl font-bold">{goal.name}</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => openEditGoal(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink dark:hover:text-white">Edit</button>
+                      <button type="button" onClick={() => setDeleteTarget({ kind: "goal", item: goal })} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-red-700 hover:text-red-900 dark:text-red-400">Delete</button>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-sm text-ink-soft">{goal.description || "No description"}</p>
+                  <p className="mt-5 text-3xl font-bold">{formatCurrency(current)}</p>
+                  <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
+                  <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Deadline</p><b>{goal.deadline || "Not set"}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - current, 0))}</b></div></div>
+                </article>
+                );
+              })}
+          {!loading && goals.length === 0 ? <p className="text-sm text-ink-soft">No long-term goals yet.</p> : null}
         </div>
       </section>
 
