@@ -35,9 +35,14 @@ export const api = {
   accounts: {
     list: () => authorizedFetch("/api/accounts"),
     create: (body: unknown) => authorizedFetch("/api/accounts", { method: "POST", body: JSON.stringify(body) }),
+    update: (id: string, body: unknown) => authorizedFetch(`/api/accounts/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    delete: (id: string) => authorizedFetch(`/api/accounts/${id}`, { method: "DELETE" }),
+    transfer: (body: unknown) => authorizedFetch("/api/transfers", { method: "POST", body: JSON.stringify(body) }),
   },
   categories: {
     list: () => authorizedFetch("/api/categories"),
+    create: (body: unknown) => authorizedFetch("/api/categories", { method: "POST", body: JSON.stringify(body) }),
+    update: (id: string, body: unknown) => authorizedFetch(`/api/categories/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   },
   transactions: {
     list: () => authorizedFetch("/api/transactions"),
@@ -45,14 +50,21 @@ export const api = {
   },
   savingsGoals: {
     list: () => authorizedFetch("/api/savings-goals"),
+    create: (body: unknown) => authorizedFetch("/api/savings-goals", { method: "POST", body: JSON.stringify(body) }),
+    update: (id: string, body: unknown) => authorizedFetch(`/api/savings-goals/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    delete: (id: string) => authorizedFetch(`/api/savings-goals/${id}`, { method: "DELETE" }),
   },
   savingsContributions: {
     create: (body: unknown) => authorizedFetch("/api/savings-contributions", { method: "POST", body: JSON.stringify(body) }),
   },
   financialGoals: {
     list: () => authorizedFetch("/api/financial-goals"),
+    create: (body: unknown) => authorizedFetch("/api/financial-goals", { method: "POST", body: JSON.stringify(body) }),
+    update: (id: string, body: unknown) => authorizedFetch(`/api/financial-goals/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    delete: (id: string) => authorizedFetch(`/api/financial-goals/${id}`, { method: "DELETE" }),
   },
   budgets: {
+    create: (body: unknown) => authorizedFetch("/api/budgets", { method: "POST", body: JSON.stringify(body) }),
     list: (month?: number, year?: number) => {
       const params = new URLSearchParams();
       if (month) params.set("month", String(month));
