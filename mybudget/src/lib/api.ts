@@ -43,6 +43,17 @@ export const api = {
       }>,
     logout: () => authorizedFetch("/api/auth/logout", { method: "POST" }),
   },
+  profile: {
+    get: () =>
+      authorizedFetch("/api/profile") as Promise<{
+        id: string;
+        full_name: string | null;
+        username: string | null;
+        is_new_user?: number | boolean | null;
+      }>,
+    update: (body: { full_name?: string; is_new_user?: number }) =>
+      authorizedFetch("/api/profile", { method: "PUT", body: JSON.stringify(body) }),
+  },
   dashboard: (month?: number, year?: number) => {
     const params = new URLSearchParams();
     if (month) params.set("month", String(month));

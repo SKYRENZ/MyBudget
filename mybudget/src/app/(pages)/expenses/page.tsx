@@ -231,9 +231,13 @@ export default function ExpensesPage() {
         description="Track spending, manage category limits and keep every account in balance."
         actions={
           <>
-            <ActionButton primary onClick={() => setShowExpenseForm(true)}>+ Add expense</ActionButton>
-            <ActionButton onClick={() => setShowIncomeForm(true)}>+ Add income</ActionButton>
-            <ActionButton onClick={() => setShowCategoryForm(true)}>+ Add category</ActionButton>
+            <span data-tour="expenses-add-tx" className="inline-flex flex-wrap gap-2">
+              <ActionButton primary onClick={() => setShowExpenseForm(true)}>+ Add expense</ActionButton>
+              <ActionButton onClick={() => setShowIncomeForm(true)}>+ Add income</ActionButton>
+            </span>
+            <span data-tour="expenses-add-category" className="inline-flex">
+              <ActionButton onClick={() => setShowCategoryForm(true)}>+ Add category</ActionButton>
+            </span>
             <ActionButton onClick={() => setShowImportForm(true)}>Import CSV</ActionButton>
           </>
         }

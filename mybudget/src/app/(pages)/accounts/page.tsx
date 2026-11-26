@@ -152,9 +152,11 @@ export default function AccountsPage() {
         description="Monitor balances across banking, cash and digital wallets."
         actions={
           <>
-            <ActionButton primary onClick={openCreate}>
-              Add account
-            </ActionButton>
+            <span data-tour="accounts-add" className="inline-flex">
+              <ActionButton primary onClick={openCreate}>
+                Add account
+              </ActionButton>
+            </span>
             <ActionButton
               onClick={() => {
                 setError("");

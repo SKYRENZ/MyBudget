@@ -52,7 +52,12 @@ export async function POST(request: Request) {
       const authedClient = createServerSupabase(data.session.access_token);
       await authedClient
         .from("profiles")
-        .upsert({ id: data.user.id, full_name: cleanUsername });
+        .upsert({
+          id: data.user.id,
+          full_name: cleanUsername,
+          username: cleanUsername,
+          is_new_user: 1,
+        });
 
       const encrypted = encryptSession({
         access_token: data.session.access_token,

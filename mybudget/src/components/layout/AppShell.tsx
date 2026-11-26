@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { BudgetTutorial, triggerTutorialReplay } from "@/components/tutorial/BudgetTutorial";
 import { Container } from "@/components/ui/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { api, clearLegacyAuthStorage } from "@/lib/api";
@@ -122,6 +123,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={triggerTutorialReplay}
+              aria-label="Open tutorial"
+              title="Setup tutorial"
+              className="grid size-9 place-items-center border border-ink/15 text-xs font-bold hover:border-ink/40"
+            >
+              ?
+            </button>
+            <button
+              type="button"
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
               className="grid size-9 place-items-center border border-ink/15 text-sm hover:border-ink/40"
@@ -190,11 +200,30 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </button>
                 </div>
               </div>
+
+              <div className="flex items-center justify-between border-t border-ink/15 pt-4 dark:border-white/10">
+                <div>
+                  <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Setup guide</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">Walk through accounts, categories, goals, and transactions.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    triggerTutorialReplay();
+                  }}
+                  className="shrink-0 border border-ink/15 px-3.5 py-2 text-[0.58rem] font-bold uppercase tracking-[0.13em] hover:border-ink/40 dark:border-white/15"
+                >
+                  Replay tutorial
+                </button>
+              </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6"><button type="button" onClick={() => setSettingsOpen(false)} className="border border-ink/15 px-4 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.13em]">Cancel</button><button type="button" onClick={saveCurrencySettings} className="border border-ember-deep bg-ember-deep px-4 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-white">Save settings</button></div>
           </section>
         </div>
       ) : null}
+
+      <BudgetTutorial />
     </div>
   );
 }

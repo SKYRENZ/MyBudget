@@ -261,11 +261,11 @@ export default function SavingsPage() {
         title="Planning"
         description="Manage savings funds and long-term financial goals in one place."
         actions={
-          <>
+          <span data-tour="planning-actions" className="inline-flex flex-wrap gap-2">
             <ActionButton primary onClick={() => { resetFormFields(); setDialog("contribution"); }}>Add contribution</ActionButton>
             <ActionButton onClick={openCreateSavings}>Create savings fund</ActionButton>
             <ActionButton onClick={openCreateGoal}>Create goal</ActionButton>
-          </>
+          </span>
         }
       />
 
