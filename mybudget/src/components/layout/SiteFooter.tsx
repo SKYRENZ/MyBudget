@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { footer } from "@/content/landing";
@@ -13,21 +12,6 @@ export function SiteFooter() {
             {footer.note}
           </p>
         </div>
-
-        <nav aria-label="Footer">
-          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            {footer.links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft transition-colors hover:text-ember-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember-deep sm:text-[0.7rem]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </Container>
 
       <Container className="border-t border-ink/10 py-5">

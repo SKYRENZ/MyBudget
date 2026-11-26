@@ -22,7 +22,7 @@ export const hero = {
     "Effortless monthly planning and everyday tracking for the money that matters to you.",
   cta: {
     label: "Start budgeting",
-    href: "#start",
+    href: "/auth?mode=signup",
   },
 } as const;
 

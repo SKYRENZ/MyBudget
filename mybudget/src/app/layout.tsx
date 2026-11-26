@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   title: "MyBudget — Budget planner and tracker",
   description:
     "Plan your month, track every expense and grow your savings with a calm, simple budget planner for everyday life.",
+  icons: {
+    icon: "/logo/Designer.png",
+    apple: "/logo/Designer.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

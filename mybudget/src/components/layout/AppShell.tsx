@@ -48,6 +48,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
   }, [dark]);
 
+  if (pathname === "/" || pathname === "/auth") {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-cream text-ink dark:bg-[#17120f] dark:text-[#f7eddd]">
       <header className="sticky top-0 z-40 border-b border-ink/12 bg-cream/95 backdrop-blur dark:border-white/10 dark:bg-[#17120f]/95">
