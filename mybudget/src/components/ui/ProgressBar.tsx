@@ -19,7 +19,7 @@ export function ProgressBar({
   tone = "ember",
   className = "",
 }: ProgressBarProps) {
-  const percent = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  const percent = max > 0 ? Math.min(100, Number(((value / max) * 100).toFixed(2))) : 0;
 
   return (
     <div

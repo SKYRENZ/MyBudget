@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Container } from "@/components/ui/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { api, clearLegacyAuthStorage } from "@/lib/api";
 import { getCurrencySettings, getCurrencySnapshot, getServerCurrencySnapshot, subscribeCurrencySettings, updateCurrencySettings, type CurrencyCode } from "@/lib/currency";
 
 const nav = [
@@ -36,17 +37,38 @@ function getServerThemeSnapshot() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const dark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   useSyncExternalStore(subscribeCurrencySettings, getCurrencySnapshot, getServerCurrencySnapshot);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>("USD");
+  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>("PHP");
   const [usdToPhp, setUsdToPhp] = useState(String(getCurrencySettings().usdToPhp));
+  const [sessionUser, setSessionUser] = useState<{ id: string; username: string } | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   function openSettings() {
     const settings = getCurrencySettings();
     setCurrencyCode(settings.code);
     setUsdToPhp(String(settings.usdToPhp));
     setSettingsOpen(true);
+    api.auth
+      .session()
+      .then((res) => setSessionUser(res.authenticated ? res.user : null))
+      .catch(() => setSessionUser(null));
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await api.auth.logout();
+      clearLegacyAuthStorage();
+      setSessionUser(null);
+      setSettingsOpen(false);
+      router.replace("/auth");
+      router.refresh();
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   function toggleTheme() {
@@ -146,6 +168,28 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="grid gap-5 p-5 sm:p-6">
               <fieldset><legend className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Display currency</legend><div className="mt-2 grid grid-cols-2 border border-ink/15"><button type="button" onClick={() => setCurrencyCode("USD")} className={`py-3 text-sm font-bold ${currencyCode === "USD" ? "bg-ink text-paper" : "text-ink-soft"}`}>US Dollar · USD</button><button type="button" onClick={() => setCurrencyCode("PHP")} className={`py-3 text-sm font-bold ${currencyCode === "PHP" ? "bg-ink text-paper" : "text-ink-soft"}`}>Philippine Peso · PHP</button></div></fieldset>
               <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">1 US Dollar equals</span><div className="mt-2 flex border border-ink/15 focus-within:border-ember-deep"><span className="grid w-14 place-items-center border-r border-ink/15 text-sm text-ink-soft">PHP</span><input type="number" min="0.0001" step="0.0001" value={usdToPhp} onChange={(event) => setUsdToPhp(event.target.value)} className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm outline-none" /></div><p className="mt-2 text-xs leading-relaxed text-ink-soft">Update this rate manually. It converts stored USD values for display only.</p></label>
+
+              <div className="border-t border-ink/15 pt-4 dark:border-white/10">
+                <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Account &amp; session</p>
+                <div className="mt-2 flex items-center justify-between gap-3 border border-ink/15 px-3.5 py-3 dark:border-white/10">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {sessionUser ? sessionUser.username : "Active session"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-ink-soft">
+                      Session key: •••••••••••• (secured via HttpOnly cookie)
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="shrink-0 border border-red-700/30 bg-red-50 px-3.5 py-2 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-red-800 transition-colors hover:border-red-700 hover:bg-red-100 disabled:opacity-60 dark:border-red-400/30 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-900/50"
+                  >
+                    {loggingOut ? "Logging out…" : "Log out"}
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6"><button type="button" onClick={() => setSettingsOpen(false)} className="border border-ink/15 px-4 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.13em]">Cancel</button><button type="button" onClick={saveCurrencySettings} className="border border-ember-deep bg-ember-deep px-4 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-white">Save settings</button></div>
           </section>

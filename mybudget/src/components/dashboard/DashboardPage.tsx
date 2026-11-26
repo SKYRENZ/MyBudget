@@ -94,7 +94,7 @@ export function DashboardPage() {
               ) : (
                 <ul className="mt-5 space-y-5">
                   {data.savingsGoals.map((goal) => {
-                    const percent = Math.round((Number(goal.current_amount) / Math.max(Number(goal.target_amount), 1)) * 100);
+                    const percent = Number(((Number(goal.current_amount) / Math.max(Number(goal.target_amount), 1)) * 100).toFixed(2));
                     return (
                       <li key={goal.id}>
                         <div className="flex justify-between text-sm">

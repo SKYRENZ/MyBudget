@@ -23,7 +23,7 @@ export default function ReportsPage() {
   const income = transactions.filter((row: Transaction) => row.type === "income").reduce((sum, row) => sum + Number(row.amount), 0);
   const expenses = transactions.filter((row: Transaction) => row.type === "expense").reduce((sum, row) => sum + Number(row.amount), 0);
   const savings = Math.max(income - expenses, 0);
-  const savingsRate = income > 0 ? Math.round((savings / income) * 100) : 0;
+  const savingsRate = income > 0 ? Number(((savings / income) * 100).toFixed(2)) : 0;
 
   const categoryTotals = transactions
     .filter((row: Transaction) => row.type === "expense")

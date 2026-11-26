@@ -38,9 +38,8 @@ export function MonthlySummaryPanel({
     ...rows.map((row) => Math.max(row.income, row.expenses)),
   );
 
-  const averageNet = Math.round(
-    rows.reduce((total, row) => total + row.net, 0) / rows.length,
-  );
+  const averageNet =
+    rows.reduce((total, row) => total + row.net, 0) / rows.length;
 
   return (
     <Panel

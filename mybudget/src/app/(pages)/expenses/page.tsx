@@ -221,7 +221,7 @@ export default function ExpensesPage() {
             .filter((row) => row.type === "expense" && row.category_id === category.id)
             .reduce((sum, row) => sum + Number(row.amount), 0);
           const limit = Number(category.monthly_budget);
-          const percent = limit > 0 ? Math.round(spent / limit * 100) : 0;
+          const percent = limit > 0 ? Number(((spent / limit) * 100).toFixed(2)) : 0;
           return <section key={category.id} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]"><div className="flex justify-between"><h2 className="font-display text-lg font-bold">{category.name}</h2><span className="text-xs font-bold">{percent}%</span></div><div className="mt-5 h-1.5 bg-ink/10"><div className="h-full bg-ember-deep" style={{width:`${Math.min(percent,100)}%`}} /></div><div className="mt-4 grid grid-cols-2 text-xs"><div><p className="text-ink-soft">Spent</p><b>{formatCurrency(spent)}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(limit-spent)}</b></div></div><p className="mt-3 border-t border-ink/10 pt-3 text-[0.65rem] text-ink-soft">Limit {formatCurrency(limit)}</p></section>;
         })}
         {categories.length === 0 && !error ? <p className="text-sm text-ink-soft">No categories or expenses yet.</p> : null}

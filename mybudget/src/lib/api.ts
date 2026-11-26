@@ -1,25 +1,33 @@
-import { supabase } from "@/lib/supabase";
+export function clearLegacyAuthStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        window.localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+}
 
 async function authorizedFetch(path: string, init?: RequestInit) {
-  if (!supabase) throw new Error("Supabase is not configured");
-
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  const token = data.session?.access_token;
-  if (!token) throw new Error("Please sign in to access your budget");
-
   const response = await fetch(path, {
     ...init,
     cache: "no-store",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
       ...init?.headers,
     },
   });
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
+    if (response.status === 401) {
+      throw new Error(body?.error ?? "Please sign in to access your budget");
+    }
     throw new Error(body?.error ?? `Request failed with status ${response.status}`);
   }
 
@@ -27,6 +35,14 @@ async function authorizedFetch(path: string, init?: RequestInit) {
 }
 
 export const api = {
+  auth: {
+    session: () =>
+      authorizedFetch("/api/auth/session") as Promise<{
+        authenticated: boolean;
+        user: { id: string; username: string } | null;
+      }>,
+    logout: () => authorizedFetch("/api/auth/logout", { method: "POST" }),
+  },
   dashboard: (month?: number, year?: number) => {
     const params = new URLSearchParams();
     if (month) params.set("month", String(month));

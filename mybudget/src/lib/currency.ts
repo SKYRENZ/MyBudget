@@ -6,7 +6,7 @@ export type CurrencySettings = {
 };
 
 export const DEFAULT_CURRENCY_SETTINGS: CurrencySettings = {
-  code: "USD",
+  code: "PHP",
   usdToPhp: 56,
 };
 
@@ -15,7 +15,7 @@ export const CURRENCY_SETTINGS_EVENT = "mybudget-currency-change";
 export function getCurrencySettings(): CurrencySettings {
   if (typeof window === "undefined") return DEFAULT_CURRENCY_SETTINGS;
 
-  const code = window.localStorage.getItem("mybudget-currency") === "PHP" ? "PHP" : "USD";
+  const code = window.localStorage.getItem("mybudget-currency") === "USD" ? "USD" : "PHP";
   const savedRate = Number(window.localStorage.getItem("mybudget-usd-to-php"));
 
   return {
@@ -56,23 +56,28 @@ export function updateCurrencySettings(settings: CurrencySettings) {
   window.dispatchEvent(new Event(CURRENCY_SETTINGS_EVENT));
 }
 
-function toDisplayAmount(amount: number) {
+export function toDisplayAmount(amount: number) {
   const settings = getCurrencySettings();
   return settings.code === "PHP" ? amount * settings.usdToPhp : amount;
 }
 
-function formatWholeCurrencyAmount(amount: number) {
+function formatDecimalAmount(amount: number, fractionDigits = 2) {
+  const fixed = Math.abs(amount).toFixed(fractionDigits);
+  const [whole, decimal] = fixed.split(".");
+  const withCommas = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decimal ? `${withCommas}.${decimal}` : withCommas;
+}
+
+function formatDecimalCurrencyAmount(amount: number) {
   const settings = getCurrencySettings();
   const displayAmount = toDisplayAmount(amount);
   const sign = displayAmount < 0 ? "-" : "";
   const symbol = settings.code === "PHP" ? "₱" : "$";
-  const whole = Math.abs(Math.round(displayAmount)).toString();
-  const withCommas = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return `${sign}${symbol}${withCommas}`;
+  return `${sign}${symbol}${formatDecimalAmount(displayAmount, 2)}`;
 }
 
 export function formatCurrency(amount: number) {
-  return formatWholeCurrencyAmount(amount);
+  return formatDecimalCurrencyAmount(amount);
 }
 
 export function formatCompactCurrency(amount: number) {
@@ -83,7 +88,7 @@ export function formatCompactCurrency(amount: number) {
   const absolute = Math.abs(convertedAmount);
 
   if (absolute < 1000) {
-    return `${sign}${symbol}${Math.round(absolute)}`;
+    return `${sign}${symbol}${formatDecimalAmount(absolute, 2)}`;
   }
 
   const units = [
@@ -92,10 +97,7 @@ export function formatCompactCurrency(amount: number) {
     { value: 1_000, suffix: "K" },
   ];
   const unit = units.find((candidate) => absolute >= candidate.value) ?? units[units.length - 1];
-  const compact = Math.round((absolute / unit.value) * 10) / 10;
-  const compactText = Number.isInteger(compact)
-    ? compact.toString()
-    : compact.toFixed(1);
+  const compactText = (absolute / unit.value).toFixed(2);
 
   return `${sign}${symbol}${compactText}${unit.suffix}`;
 }
@@ -103,7 +105,7 @@ export function formatCompactCurrency(amount: number) {
 export function formatPercent(part: number, whole: number) {
   if (whole <= 0) return "0%";
 
-  return `${Math.round((part / whole) * 100)}%`;
+  return `${Number(((part / whole) * 100).toFixed(2))}%`;
 }
 
 export function getCurrencySymbol() {

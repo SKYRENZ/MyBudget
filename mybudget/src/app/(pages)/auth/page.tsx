@@ -3,13 +3,8 @@
 import { Suspense, type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { clearLegacyAuthStorage } from "@/lib/api";
 import { AccentBars } from "@/components/landing/AccentBars";
-
-function usernameToEmail(username: string) {
-  const slug = username.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
-  return `${slug}@mybudget.app`;
-}
 
 function AuthForm() {
   const router = useRouter();
@@ -43,44 +38,37 @@ function AuthForm() {
       return;
     }
 
-    if (!supabase) {
-      setError("Supabase is not configured.");
-      return;
-    }
-
     setBusy(true);
-    const email = usernameToEmail(cleanUsername);
 
     try {
-      if (mode === "login") {
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-        if (loginError) throw loginError;
+      clearLegacyAuthStorage();
+      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/signup";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: cleanUsername, password }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as {
+        authenticated?: boolean;
+        message?: string;
+        error?: string;
+      } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Authentication failed.");
+      }
+
+      if (payload?.authenticated) {
         router.replace("/dashboard");
         router.refresh();
       } else {
-        const { data, error: signupError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: cleanUsername,
-              full_name: cleanUsername,
-            },
-          },
-        });
-        if (signupError) throw signupError;
-
-        if (data.user) {
-          await supabase.from("profiles").upsert({ id: data.user.id, full_name: cleanUsername });
-        }
-
-        if (data.session) {
-          router.replace("/dashboard");
-          router.refresh();
-        } else {
-          setMessage("Account created. Please sign in with your username and password.");
-          setMode("login");
-        }
+        setMessage(
+          payload?.message ??
+            "Account created. Please sign in with your username and password."
+        );
+        setMode("login");
       }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Authentication failed.");

@@ -51,7 +51,7 @@ export function ExpenseForm({
 
     if (!Number.isFinite(value) || value < 0) return;
 
-    onSubmit(category, Math.round(value));
+    onSubmit(category, value);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {

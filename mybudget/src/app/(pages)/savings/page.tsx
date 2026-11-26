@@ -181,7 +181,7 @@ export default function SavingsPage() {
           {savings.map((goal) => {
             const target = Number(goal.target_amount);
             const saved = Number(goal.current_amount);
-            const percent = target > 0 ? Math.round((saved / target) * 100) : 0;
+            const percent = target > 0 ? Number(((saved / target) * 100).toFixed(2)) : 0;
             return (
               <article key={goal.id} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
                 <div className="flex items-start justify-between"><p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft">{goal.status}</p><button type="button" onClick={() => archiveSavingGoal(goal)} className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-ink-soft">{goal.status === "archived" ? "Restore" : "Archive"}</button></div>

@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { api } from "@/lib/api";
-import { formatCurrency, toStoredUsd } from "@/lib/currency";
+import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account } from "@/lib/database-types";
 
 const accountTypes = [
@@ -61,7 +61,7 @@ export default function AccountsPage() {
     setEditing(account);
     setName(account.name);
     setType(account.type);
-    setBalance(String(account.balance));
+    setBalance(toDisplayAmount(Number(account.balance)).toFixed(2));
     setColor(account.color || "#D97706");
     setError("");
     setDialog("account");
@@ -278,7 +278,7 @@ export default function AccountsPage() {
                 </label>
                 <label className="block">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
-                    Balance
+                    Balance ({getCurrencySymbol()})
                   </span>
                   <input
                     type="number"
@@ -338,7 +338,7 @@ export default function AccountsPage() {
                 </label>
                 <label className="block sm:col-span-2">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
-                    Amount
+                    Amount ({getCurrencySymbol()})
                   </span>
                   <input
                     type="number"
