@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, type FormEvent, useState } from "react";
+import { Suspense, type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { clearLegacyAuthStorage } from "@/lib/api";
+import { api, clearLegacyAuthStorage } from "@/lib/api";
 import { AccentBars } from "@/components/landing/AccentBars";
 
 function AuthForm() {
@@ -16,6 +16,21 @@ function AuthForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    api.auth
+      .session()
+      .then((res) => {
+        if (!cancelled && res.authenticated) {
+          router.replace("/dashboard");
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

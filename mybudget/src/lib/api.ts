@@ -26,6 +26,13 @@ async function authorizedFetch(path: string, init?: RequestInit) {
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     if (response.status === 401) {
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname !== "/auth" &&
+        window.location.pathname !== "/"
+      ) {
+        window.location.replace("/auth");
+      }
       throw new Error(body?.error ?? "Please sign in to access your budget");
     }
     throw new Error(body?.error ?? `Request failed with status ${response.status}`);

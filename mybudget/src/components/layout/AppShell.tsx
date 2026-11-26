@@ -84,6 +84,26 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    if (pathname === "/" || pathname === "/auth") return;
+    let cancelled = false;
+    api.auth
+      .session()
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.authenticated) {
+          clearLegacyAuthStorage();
+          router.replace("/auth");
+        } else {
+          setSessionUser(res.user);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router]);
+
+  useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
   }, [dark]);
