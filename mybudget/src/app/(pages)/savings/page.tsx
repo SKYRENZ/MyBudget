@@ -6,9 +6,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
+import type { SavingsGoal } from "@/lib/database-types";
 
 export default function SavingsPage() {
-  const [goals, setGoals] = useState<any[]>([]);
+  const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {

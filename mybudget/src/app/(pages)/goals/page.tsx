@@ -6,9 +6,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
+import type { FinancialGoal } from "@/lib/database-types";
 
 export default function GoalsPage() {
-	const [goals, setGoals] = useState<any[]>([]);
+	const [goals, setGoals] = useState<FinancialGoal[]>([]);
 	const [error, setError] = useState("");
 	useEffect(() => {
 		api.financialGoals

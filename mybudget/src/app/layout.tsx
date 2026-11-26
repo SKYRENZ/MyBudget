@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   description:
     "Plan your month, track every expense and grow your savings with a calm, simple budget planner for everyday life.",
   icons: {
-    icon: "/logo/Designer.png",
-    apple: "/logo/Designer.png",
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
   },
 };
 

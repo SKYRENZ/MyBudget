@@ -6,17 +6,18 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/currency";
+import type { Category, Transaction } from "@/lib/database-types";
 
 export default function ExpensesPage() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     Promise.all([api.categories.list(), api.transactions.list()])
       .then(([categoryRows, transactionRows]) => {
         setCategories(categoryRows);
-        setTransactions(transactionRows.filter((row: any) => row.type === "expense"));
+        setTransactions(transactionRows.filter((row: Transaction) => row.type === "expense"));
       })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Could not load expenses"));
   }, []);
@@ -34,7 +35,7 @@ export default function ExpensesPage() {
         })}
         {categories.length === 0 && !error ? <p className="text-sm text-ink-soft">No categories or expenses yet.</p> : null}
       </div>
-      <section className="mt-6 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"><div className="border-b border-ink/15 p-5"><h2 className="font-display text-xl font-bold">Transactions</h2></div><div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft"><tr><td className="px-5 py-3">Description</td><td>Category</td><td>Account</td><td>Date</td><td className="px-5 text-right">Amount</td></tr></thead><tbody>{transactions.map((row)=><tr key={row.id} className="border-t border-ink/10"><td className="px-5 py-4 font-bold">{row.description || "Expense"}</td><td>{row.categories?.name || "—"}</td><td>{row.accounts?.name || "—"}</td><td>{row.transaction_date}</td><td className="px-5 text-right font-bold">−{formatCurrency(Number(row.amount))}</td></tr>)}</tbody></table>{transactions.length===0&&!error?<p className="p-5 text-sm text-ink-soft">No expense transactions yet.</p>:null}</div></section>
+      <section className="mt-6 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"><div className="border-b border-ink/15 p-5"><h2 className="font-display text-xl font-bold">Transactions</h2></div><div className="overflow-x-auto"><table className="w-full min-w-162.5 text-left text-sm"><thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft"><tr><td className="px-5 py-3">Description</td><td>Category</td><td>Account</td><td>Date</td><td className="px-5 text-right">Amount</td></tr></thead><tbody>{transactions.map((row)=><tr key={row.id} className="border-t border-ink/10"><td className="px-5 py-4 font-bold">{row.description || "Expense"}</td><td>{row.categories?.name || "—"}</td><td>{row.accounts?.name || "—"}</td><td>{row.transaction_date}</td><td className="px-5 text-right font-bold">−{formatCurrency(Number(row.amount))}</td></tr>)}</tbody></table>{transactions.length===0&&!error?<p className="p-5 text-sm text-ink-soft">No expense transactions yet.</p>:null}</div></section>
     </Container>
   );
 }

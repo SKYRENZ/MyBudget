@@ -16,7 +16,18 @@ export function createServerSupabase(accessToken: string): SupabaseClient {
   });
 }
 
-export async function getRequestUser(request: Request) {
+type AuthenticatedRequest =
+  | {
+      supabase: SupabaseClient;
+      user: { id: string };
+      status: 200;
+    }
+  | {
+      error: string;
+      status: 401;
+    };
+
+export async function getRequestUser(request: Request): Promise<AuthenticatedRequest> {
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) {
     return { error: "Missing authorization bearer token", status: 401 as const };
