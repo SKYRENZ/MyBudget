@@ -4,7 +4,10 @@ export async function GET(request: Request) {
   const auth = await getRequestUser(request);
   if (!("supabase" in auth)) return Response.json({ error: auth.error }, { status: auth.status });
   const url = new URL(request.url);
-  let query = auth.supabase.from("budgets").select("*, categories(name,icon,color)");
+  let query = auth.supabase
+    .from("budgets")
+    .select("*, categories(name,icon,color)")
+    .eq("user_id", auth.user.id);
   const month = url.searchParams.get("month");
   const year = url.searchParams.get("year");
   if (month) query = query.eq("month", Number(month));

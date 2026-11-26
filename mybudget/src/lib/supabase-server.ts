@@ -21,7 +21,27 @@ export function createAnonServerSupabase(): SupabaseClient {
   });
 }
 
+export function createAdminServerSupabase(): SupabaseClient {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SECRET_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Missing Supabase server configuration");
+  }
+
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export function createServerSupabase(accessToken: string): SupabaseClient {
+  if (process.env.SUPABASE_SECRET_KEY) {
+    return createAdminServerSupabase();
+  }
+
   const { url, key } = getSupabaseServerEnv();
 
   return createClient(url, key, {
@@ -54,15 +74,14 @@ export async function getRequestUser(request: Request): Promise<AuthenticatedReq
     return { error: "Please sign in to access your budget", status: 401 as const };
   }
 
-  const supabase = createServerSupabase(accessToken);
-  const { data, error } = await supabase.auth.getUser(accessToken);
+  const anonClient = createAnonServerSupabase();
+  const { data, error } = await anonClient.auth.getUser(accessToken);
 
   if (!error && data.user) {
-    return { supabase, user: data.user, status: 200 as const };
+    return { supabase: createServerSupabase(accessToken), user: data.user, status: 200 as const };
   }
 
   if (cookieSession?.refresh_token) {
-    const anonClient = createAnonServerSupabase();
     const { data: refreshed, error: refreshError } = await anonClient.auth.refreshSession({
       refresh_token: cookieSession.refresh_token,
     });
@@ -85,6 +104,17 @@ export async function getRequestUser(request: Request): Promise<AuthenticatedReq
 }
 
 export function jsonError(error: unknown, status = 400) {
-  const message = error instanceof Error ? error.message : "Request failed";
+  let message = "Request failed";
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === "object" && error !== null) {
+    if ("message" in error && typeof (error as { message: unknown }).message === "string") {
+      message = (error as { message: string }).message;
+    } else {
+      message = JSON.stringify(error);
+    }
+  } else if (typeof error === "string") {
+    message = error;
+  }
   return Response.json({ error: message }, { status });
 }

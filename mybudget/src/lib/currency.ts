@@ -58,8 +58,17 @@ export function updateCurrencySettings(settings: CurrencySettings) {
 
 export function toDisplayAmount(amount: number) {
   const settings = getCurrencySettings();
-  return settings.code === "PHP" ? amount * settings.usdToPhp : amount;
+  if (!Number.isFinite(amount)) return 0;
+  return settings.code === "USD" ? amount / settings.usdToPhp : amount;
 }
+
+export function toStoredCurrency(amount: number) {
+  const settings = getCurrencySettings();
+  if (!Number.isFinite(amount)) return 0;
+  return settings.code === "USD" ? amount * settings.usdToPhp : amount;
+}
+
+export const toStoredUsd = toStoredCurrency;
 
 function formatDecimalAmount(amount: number, fractionDigits = 2) {
   const fixed = Math.abs(amount).toFixed(fractionDigits);
@@ -72,7 +81,7 @@ function formatDecimalCurrencyAmount(amount: number) {
   const settings = getCurrencySettings();
   const displayAmount = toDisplayAmount(amount);
   const sign = displayAmount < 0 ? "-" : "";
-  const symbol = settings.code === "PHP" ? "₱" : "$";
+  const symbol = settings.code === "USD" ? "$" : "₱";
   return `${sign}${symbol}${formatDecimalAmount(displayAmount, 2)}`;
 }
 
@@ -84,7 +93,7 @@ export function formatCompactCurrency(amount: number) {
   const settings = getCurrencySettings();
   const convertedAmount = toDisplayAmount(amount);
   const sign = convertedAmount < 0 ? "-" : "";
-  const symbol = settings.code === "PHP" ? "₱" : "$";
+  const symbol = settings.code === "USD" ? "$" : "₱";
   const absolute = Math.abs(convertedAmount);
 
   if (absolute < 1000) {
@@ -109,11 +118,5 @@ export function formatPercent(part: number, whole: number) {
 }
 
 export function getCurrencySymbol() {
-  return getCurrencySettings().code === "PHP" ? "₱" : "$";
-}
-
-export function toStoredUsd(amount: number) {
-  const settings = getCurrencySettings();
-  if (!Number.isFinite(amount) || amount <= 0) return 0;
-  return settings.code === "PHP" ? amount / settings.usdToPhp : amount;
+  return getCurrencySettings().code === "USD" ? "$" : "₱";
 }

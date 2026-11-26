@@ -24,6 +24,8 @@ export default function AccountsPage() {
   const [saving, setSaving] = useState(false);
   const [dialog, setDialog] = useState<"account" | "transfer" | null>(null);
   const [editing, setEditing] = useState<Account | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<(typeof accountTypes)[number]>("bank");
   const [balance, setBalance] = useState("");
@@ -75,12 +77,18 @@ export default function AccountsPage() {
     setSaving(true);
     setError("");
     try {
-      const body = {
-        name: name.trim(),
-        type,
-        balance: toStoredUsd(Number(balance) || 0),
-        color,
-      };
+      const body = editing
+        ? {
+            name: name.trim(),
+            type,
+            color,
+          }
+        : {
+            name: name.trim(),
+            type,
+            balance: toStoredUsd(Number(balance) || 0),
+            color,
+          };
       if (editing) await api.accounts.update(editing.id, body);
       else await api.accounts.create(body);
       setDialog(null);
@@ -92,13 +100,19 @@ export default function AccountsPage() {
     }
   }
 
-  async function deleteAccount(account: Account) {
+  async function confirmDeleteAccount() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     setError("");
     try {
-      await api.accounts.delete(account.id);
+      await api.accounts.delete(deleteTarget.id);
+      setDeleteTarget(null);
       await loadAccounts();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not delete account");
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -185,7 +199,7 @@ export default function AccountsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => deleteAccount(account)}
+                    onClick={() => setDeleteTarget(account)}
                     className="text-xs text-red-700"
                   >
                     Delete
@@ -278,15 +292,21 @@ export default function AccountsPage() {
                 </label>
                 <label className="block">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
-                    Balance ({getCurrencySymbol()})
+                    {editing ? "Current balance" : "Initial balance"} ({getCurrencySymbol()})
                   </span>
                   <input
                     type="number"
                     step="0.01"
                     value={balance}
                     onChange={(event) => setBalance(event.target.value)}
-                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm"
+                    disabled={Boolean(editing)}
+                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm disabled:cursor-not-allowed disabled:bg-ink/5 disabled:opacity-75 dark:disabled:bg-white/5"
                   />
+                  {editing ? (
+                    <span className="mt-1 block text-[0.62rem] text-ink-soft">
+                      Balance is managed through transactions and transfers.
+                    </span>
+                  ) : null}
                 </label>
                 <label className="block sm:col-span-2">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
@@ -368,6 +388,50 @@ export default function AccountsPage() {
                     : "Add account"
                   : "Transfer funds"}
               </ActionButton>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {deleteTarget ? (
+        <div
+          className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deleting) setDeleteTarget(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+            className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
+          >
+            <div className="border-b border-ink/15 px-5 py-4 sm:px-6">
+              <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-red-700 dark:text-red-400">
+                Confirm deletion
+              </p>
+              <h2 id="delete-account-title" className="mt-1 font-display text-2xl font-bold">
+                Delete account?
+              </h2>
+            </div>
+            <div className="p-5 sm:p-6">
+              <p className="text-sm leading-relaxed text-ink-soft">
+                Are you sure you want to permanently delete{" "}
+                <b className="text-ink dark:text-white">{deleteTarget.name}</b>? This action cannot be
+                undone.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+              <ActionButton onClick={() => setDeleteTarget(null)}>Cancel</ActionButton>
+              <button
+                type="button"
+                onClick={confirmDeleteAccount}
+                disabled={deleting}
+                className="border border-red-700 bg-red-700 px-4 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-white transition-colors hover:bg-red-800 disabled:opacity-60"
+              >
+                {deleting ? "Deleting…" : "Yes, delete"}
+              </button>
             </div>
           </section>
         </div>

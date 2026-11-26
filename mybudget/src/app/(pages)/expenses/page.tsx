@@ -5,7 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { api } from "@/lib/api";
-import { formatCurrency, getCurrencySymbol, toStoredUsd } from "@/lib/currency";
+import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account, Category, Transaction } from "@/lib/database-types";
 
 function currentLocalDate() {
@@ -149,6 +149,13 @@ export default function ExpensesPage() {
     }
   }
 
+  function openEditBudget(category: Category) {
+    setBudgetCategoryId(category.id);
+    setBudgetLimit(toDisplayAmount(Number(category.monthly_budget)).toFixed(2));
+    setError("");
+    setShowBudgetForm(true);
+  }
+
   async function submitBudgets() {
     const numericLimit = Number(budgetLimit);
     if (!budgetCategoryId || !numericLimit || numericLimit <= 0) {
@@ -159,12 +166,17 @@ export default function ExpensesPage() {
     setSaving(true);
     setError("");
     try {
-      await api.budgets.create({
-        category_id: budgetCategoryId,
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
-        limit_amount: toStoredUsd(numericLimit),
-      });
+      await Promise.all([
+        api.budgets.create({
+          category_id: budgetCategoryId,
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+          limit_amount: toStoredUsd(numericLimit),
+        }),
+        api.categories.update(budgetCategoryId, {
+          monthly_budget: toStoredUsd(numericLimit),
+        }),
+      ]);
       setBudgetCategoryId("");
       setBudgetLimit("");
       setShowBudgetForm(false);
@@ -213,7 +225,19 @@ export default function ExpensesPage() {
 
   return (
     <Container>
-      <PageHeader eyebrow="Cash flow" title="Expenses" description="Track spending, manage category limits and keep every account in balance." actions={<><ActionButton primary onClick={() => setShowExpenseForm(true)}>+ Add expense</ActionButton><ActionButton onClick={() => setShowIncomeForm(true)}>+ Add income</ActionButton><ActionButton onClick={() => setShowCategoryForm(true)}>+ Add category</ActionButton><ActionButton onClick={() => setShowBudgetForm(true)}>Edit budget limits</ActionButton><ActionButton onClick={() => setShowImportForm(true)}>Import CSV</ActionButton></>} />
+      <PageHeader
+        eyebrow="Cash flow"
+        title="Expenses"
+        description="Track spending, manage category limits and keep every account in balance."
+        actions={
+          <>
+            <ActionButton primary onClick={() => setShowExpenseForm(true)}>+ Add expense</ActionButton>
+            <ActionButton onClick={() => setShowIncomeForm(true)}>+ Add income</ActionButton>
+            <ActionButton onClick={() => setShowCategoryForm(true)}>+ Add category</ActionButton>
+            <ActionButton onClick={() => setShowImportForm(true)}>Import CSV</ActionButton>
+          </>
+        }
+      />
       {error ? <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">{error}</p> : null}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {categories.map((category) => {
@@ -222,7 +246,42 @@ export default function ExpensesPage() {
             .reduce((sum, row) => sum + Number(row.amount), 0);
           const limit = Number(category.monthly_budget);
           const percent = limit > 0 ? Number(((spent / limit) * 100).toFixed(2)) : 0;
-          return <section key={category.id} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]"><div className="flex justify-between"><h2 className="font-display text-lg font-bold">{category.name}</h2><span className="text-xs font-bold">{percent}%</span></div><div className="mt-5 h-1.5 bg-ink/10"><div className="h-full bg-ember-deep" style={{width:`${Math.min(percent,100)}%`}} /></div><div className="mt-4 grid grid-cols-2 text-xs"><div><p className="text-ink-soft">Spent</p><b>{formatCurrency(spent)}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(limit-spent)}</b></div></div><p className="mt-3 border-t border-ink/10 pt-3 text-[0.65rem] text-ink-soft">Limit {formatCurrency(limit)}</p></section>;
+          return (
+            <section
+              key={category.id}
+              className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h2 className="truncate font-display text-lg font-bold">{category.name}</h2>
+                </div>
+                <span className="text-xs font-bold">{percent}%</span>
+              </div>
+              <div className="mt-5 h-1.5 bg-ink/10">
+                <div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} />
+              </div>
+              <div className="mt-4 grid grid-cols-2 text-xs">
+                <div>
+                  <p className="text-ink-soft">Spent</p>
+                  <b>{formatCurrency(spent)}</b>
+                </div>
+                <div className="text-right">
+                  <p className="text-ink-soft">Remaining</p>
+                  <b>{formatCurrency(limit - spent)}</b>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between border-t border-ink/10 pt-3 text-[0.65rem]">
+                <span className="text-ink-soft">Limit {formatCurrency(limit)}</span>
+                <button
+                  type="button"
+                  onClick={() => openEditBudget(category)}
+                  className="font-bold uppercase tracking-[0.12em] text-ember-deep hover:underline"
+                >
+                  Edit limit
+                </button>
+              </div>
+            </section>
+          );
         })}
         {categories.length === 0 && !error ? <p className="text-sm text-ink-soft">No categories or expenses yet.</p> : null}
       </div>

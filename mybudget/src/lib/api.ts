@@ -78,6 +78,7 @@ export const api = {
     list: () => authorizedFetch("/api/financial-goals"),
     create: (body: unknown) => authorizedFetch("/api/financial-goals", { method: "POST", body: JSON.stringify(body) }),
     update: (id: string, body: unknown) => authorizedFetch(`/api/financial-goals/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    contribute: (id: string, body: unknown) => authorizedFetch(`/api/financial-goals/${id}/contribute`, { method: "POST", body: JSON.stringify(body) }),
     delete: (id: string) => authorizedFetch(`/api/financial-goals/${id}`, { method: "DELETE" }),
   },
   budgets: {

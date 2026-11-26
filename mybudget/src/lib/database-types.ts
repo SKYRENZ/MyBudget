@@ -51,6 +51,7 @@ export type FinancialGoal = {
   name: string;
   description: string | null;
   target_amount: number | string | null;
+  current_amount: number | string;
   deadline: string | null;
   priority: "low" | "medium" | "high";
   status: "active" | "completed" | "archived";

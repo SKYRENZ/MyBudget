@@ -3,7 +3,11 @@ import { getRequestUser, jsonError } from "@/lib/supabase-server";
 export async function GET(request: Request) {
   const auth = await getRequestUser(request);
   if (!("supabase" in auth)) return Response.json({ error: auth.error }, { status: auth.status });
-  const { data, error } = await auth.supabase.from("categories").select("*").order("name");
+  const { data, error } = await auth.supabase
+    .from("categories")
+    .select("*")
+    .eq("user_id", auth.user.id)
+    .order("name");
   if (error) return jsonError(error, 500);
   return Response.json(data);
 }

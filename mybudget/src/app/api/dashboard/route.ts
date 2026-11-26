@@ -10,7 +10,8 @@ export async function GET(request: Request) {
 
   let transactionQuery = auth.supabase
     .from("transactions")
-    .select("*, accounts(name), categories(name,color)");
+    .select("*, accounts(name), categories(name,color)")
+    .eq("user_id", auth.user.id);
 
   if (month && year) {
     const start = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -21,12 +22,12 @@ export async function GET(request: Request) {
 
   const [transactions, accounts, categories, savingsGoals, budgets] = await Promise.all([
     transactionQuery.order("transaction_date", { ascending: false }),
-    auth.supabase.from("accounts").select("*").order("name"),
-    auth.supabase.from("categories").select("*").order("name"),
-    auth.supabase.from("savings_goals").select("*").order("created_at", { ascending: false }),
+    auth.supabase.from("accounts").select("*").eq("user_id", auth.user.id).order("name"),
+    auth.supabase.from("categories").select("*").eq("user_id", auth.user.id).order("name"),
+    auth.supabase.from("savings_goals").select("*").eq("user_id", auth.user.id).order("created_at", { ascending: false }),
     month && year
-      ? auth.supabase.from("budgets").select("*, categories(name,icon,color)").eq("month", Number(month)).eq("year", Number(year))
-      : auth.supabase.from("budgets").select("*, categories(name,icon,color)"),
+      ? auth.supabase.from("budgets").select("*, categories(name,icon,color)").eq("user_id", auth.user.id).eq("month", Number(month)).eq("year", Number(year))
+      : auth.supabase.from("budgets").select("*, categories(name,icon,color)").eq("user_id", auth.user.id),
   ]);
 
   for (const result of [transactions, accounts, categories, savingsGoals, budgets]) {

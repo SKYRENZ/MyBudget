@@ -148,7 +148,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="pb-24 lg:pb-10">{children}</main>
 
-      <nav className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-6 border border-ink/15 bg-paper/95 px-1 py-1 shadow-lg backdrop-blur lg:hidden dark:border-white/10 dark:bg-[#211b17]/95" aria-label="Mobile navigation">
+      <nav className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 border border-ink/15 bg-paper/95 px-1 py-1 shadow-lg backdrop-blur lg:hidden dark:border-white/10 dark:bg-[#211b17]/95" aria-label="Mobile navigation">
         {nav.map(([label, href]) => (
           <Link
             key={href}

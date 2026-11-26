@@ -40,8 +40,7 @@ export function DashboardPage() {
   const transactions = data?.transactions ?? [];
   const income = transactions.filter((item) => item.type === "income").reduce((sum, item) => sum + Number(item.amount), 0);
   const expenses = transactions.filter((item) => item.type === "expense").reduce((sum, item) => sum + Number(item.amount), 0);
-  const saved = data?.savingsGoals.reduce((sum, goal) => sum + Number(goal.monthly_contribution), 0) ?? 0;
-  const budget = data?.budgets.reduce((sum, item) => sum + Number(item.limit_amount), 0) ?? 0;
+  const saved = data?.savingsGoals.reduce((sum, goal) => sum + Number(goal.current_amount), 0) ?? 0;
 
   return (
     <Container>
@@ -56,7 +55,7 @@ export function DashboardPage() {
               ["Total income", income],
               ["Total expenses", expenses],
               ["Total saved", saved],
-              ["Left to spend", budget - expenses],
+              ["Left to spend", income - expenses - saved],
             ].map(([label, value]) => (
               <section key={String(label)} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft">{label}</p>

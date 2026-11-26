@@ -13,6 +13,7 @@ export async function GET(request: Request) {
   const { data, error } = await auth.supabase
     .from("transactions")
     .select("*, accounts(name,type), categories(name,color,icon)")
+    .eq("user_id", auth.user.id)
     .order("transaction_date", { ascending: false })
     .order("created_at", { ascending: false });
   if (error) return jsonError(error, 500);
