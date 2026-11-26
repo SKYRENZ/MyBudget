@@ -20,16 +20,18 @@ const TUTORIAL_REPLAY_EVENT = "mybudget-tutorial-replay";
 type StepMeta = {
   route?: string;
   eyebrow: string;
+  examplesTitle?: string;
   examples?: Array<{ label: string; detail: string }>;
 };
 
 const STEP_META: StepMeta[] = [
   {
     eyebrow: "Getting started",
+    examplesTitle: "Setup checklist",
     examples: [
-      { label: "1. Accounts", detail: "Reflect real balances (Cash, Bank, GCash)" },
+      { label: "1. Accounts", detail: "Cash, Bank & GCash balances" },
       { label: "2. Categories", detail: "Bills, food, subscriptions & limits" },
-      { label: "3. Savings & Goals", detail: "Cash reserves & long-term milestones" },
+      { label: "3. Savings & Goals", detail: "Reserves & long-term milestones" },
       { label: "4. Transactions", detail: "Income, expenses & contributions" },
     ],
   },
@@ -96,7 +98,7 @@ function TutorialTooltip({
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="w-[min(92vw,24rem)] border-2 border-ink/20 bg-paper p-5 text-ink shadow-[10px_10px_0_rgba(61,31,12,0.2)] dark:border-white/15 dark:bg-[#211b17] dark:text-[#f7eddd]"
+      className="w-[min(92vw,26rem)] border-2 border-ink/20 bg-paper p-5 text-ink shadow-[10px_10px_0_rgba(61,31,12,0.2)] dark:border-white/15 dark:bg-[#211b17] dark:text-[#f7eddd]"
     >
       <div>
         <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
@@ -119,15 +121,15 @@ function TutorialTooltip({
       </div>
 
       {meta.examples && meta.examples.length > 0 ? (
-        <div className="mt-4 border border-ink/12 bg-cream/70 p-3 dark:border-white/10 dark:bg-[#17120f]/70">
+        <div className="mt-4 border border-ink/12 bg-cream/70 p-3.5 dark:border-white/10 dark:bg-[#17120f]/70">
           <p className="text-[0.55rem] font-bold uppercase tracking-[0.16em] text-ink-soft">
-            Examples
+            {meta.examplesTitle ?? "Examples"}
           </p>
-          <ul className="mt-2 space-y-1.5 text-xs">
+          <ul className="mt-2.5 divide-y divide-ink/8 text-xs dark:divide-white/8">
             {meta.examples.map((item) => (
-              <li key={item.label} className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-ink dark:text-white">{item.label}</span>
-                <span className="text-right text-ink-soft dark:text-[#cfc2af]">{item.detail}</span>
+              <li key={item.label} className="flex items-baseline justify-between gap-4 py-1.5 first:pt-0 last:pb-0">
+                <span className="shrink-0 font-semibold text-ink dark:text-white">{item.label}</span>
+                <span className="text-right tabular-nums text-ink-soft dark:text-[#cfc2af]">{item.detail}</span>
               </li>
             ))}
           </ul>
