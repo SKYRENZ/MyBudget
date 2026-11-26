@@ -45,9 +45,7 @@ export default function ExpensesPage() {
       api.accounts.list(),
     ]);
     setCategories(categoryRows);
-    setTransactions(
-      transactionRows.filter((row: Transaction) => row.type === "expense"),
-    );
+    setTransactions(transactionRows);
     setAccounts(accountRows);
   }
 
@@ -55,7 +53,7 @@ export default function ExpensesPage() {
     Promise.all([api.categories.list(), api.transactions.list(), api.accounts.list()])
       .then(([categoryRows, transactionRows, accountRows]) => {
         setCategories(categoryRows);
-        setTransactions(transactionRows.filter((row: Transaction) => row.type === "expense"));
+        setTransactions(transactionRows);
         setAccounts(accountRows);
       })
       .catch((reason) =>
@@ -219,14 +217,16 @@ export default function ExpensesPage() {
       {error ? <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">{error}</p> : null}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {categories.map((category) => {
-          const spent = transactions.filter((row) => row.category_id === category.id).reduce((sum, row) => sum + Number(row.amount), 0);
+          const spent = transactions
+            .filter((row) => row.type === "expense" && row.category_id === category.id)
+            .reduce((sum, row) => sum + Number(row.amount), 0);
           const limit = Number(category.monthly_budget);
           const percent = limit > 0 ? Math.round(spent / limit * 100) : 0;
           return <section key={category.id} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]"><div className="flex justify-between"><h2 className="font-display text-lg font-bold">{category.name}</h2><span className="text-xs font-bold">{percent}%</span></div><div className="mt-5 h-1.5 bg-ink/10"><div className="h-full bg-ember-deep" style={{width:`${Math.min(percent,100)}%`}} /></div><div className="mt-4 grid grid-cols-2 text-xs"><div><p className="text-ink-soft">Spent</p><b>{formatCurrency(spent)}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(limit-spent)}</b></div></div><p className="mt-3 border-t border-ink/10 pt-3 text-[0.65rem] text-ink-soft">Limit {formatCurrency(limit)}</p></section>;
         })}
         {categories.length === 0 && !error ? <p className="text-sm text-ink-soft">No categories or expenses yet.</p> : null}
       </div>
-      <section className="mt-6 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"><div className="border-b border-ink/15 p-5"><h2 className="font-display text-xl font-bold">Transactions</h2></div><div className="overflow-x-auto"><table className="w-full min-w-162.5 text-left text-sm"><thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft"><tr><td className="px-5 py-3">Description</td><td>Category</td><td>Account</td><td>Date</td><td className="px-5 text-right">Amount</td></tr></thead><tbody>{transactions.map((row)=><tr key={row.id} className="border-t border-ink/10"><td className="px-5 py-4 font-bold">{row.description || "Expense"}</td><td>{row.categories?.name || "—"}</td><td>{row.accounts?.name || "—"}</td><td>{row.transaction_date}</td><td className="px-5 text-right font-bold">−{formatCurrency(Number(row.amount))}</td></tr>)}</tbody></table>{transactions.length===0&&!error?<p className="p-5 text-sm text-ink-soft">No expense transactions yet.</p>:null}</div></section>
+      <section className="mt-6 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"><div className="border-b border-ink/15 p-5"><h2 className="font-display text-xl font-bold">Transactions</h2></div><div className="overflow-x-auto"><table className="w-full min-w-162.5 text-left text-sm"><thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft"><tr><td className="px-5 py-3">Description</td><td>Type</td><td>Category</td><td>Account</td><td>Date</td><td className="px-5 text-right">Amount</td></tr></thead><tbody>{transactions.map((row)=><tr key={row.id} className="border-t border-ink/10"><td className="px-5 py-4 font-bold">{row.description || (row.type === "income" ? "Income" : "Expense")}</td><td className="uppercase text-[0.62rem] tracking-[0.12em] text-ink-soft">{row.type}</td><td>{row.categories?.name || "—"}</td><td>{row.accounts?.name || "—"}</td><td>{row.transaction_date}</td><td className="px-5 text-right font-bold">{row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}{formatCurrency(Number(row.amount))}</td></tr>)}</tbody></table>{transactions.length===0&&!error?<p className="p-5 text-sm text-ink-soft">No transactions yet.</p>:null}</div></section>
       {showExpenseForm ? (
         <div
           className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-5"
