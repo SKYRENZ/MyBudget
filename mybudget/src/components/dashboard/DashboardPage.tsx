@@ -369,11 +369,11 @@ export function DashboardPage() {
                   {transactions.slice(0, 10).map((item, index) => (
                     <li
                       key={item.id}
-                      className={`items-center justify-between gap-4 py-3 ${
-                        index >= 5 ? "hidden lg:flex" : "flex"
+                      className={`flex items-center justify-between gap-4 py-3 ${
+                        index >= 5 ? "hidden lg:flex" : ""
                       }`}
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">
                           {item.description || item.type}
                         </p>

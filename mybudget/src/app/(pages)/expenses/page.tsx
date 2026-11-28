@@ -36,7 +36,6 @@ import {
   subscribeDefaultPageSize,
   subscribeDefaultSort,
   subscribeExpenseLayout,
-  updateExpenseLayout,
 } from "@/lib/app-preferences";
 import { getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account, Category, DashboardData, Transaction } from "@/lib/database-types";
@@ -500,11 +499,6 @@ export default function ExpensesPage() {
     }
   }
 
-  function handleSwitchLayout(nextLayout: "transactions_first" | "categories_first") {
-    updateExpenseLayout(nextLayout);
-    void api.preferences.update({ expenseLayout: nextLayout }).catch(() => {});
-  }
-
   const manualSortedCategories = useMemo(() => {
     return [...categories].sort((a, b) => {
       const pinDiff = (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
@@ -640,41 +634,6 @@ export default function ExpensesPage() {
           {error}
         </p>
       ) : null}
-
-      {/* View Mode Switcher */}
-      <div className="mt-5 flex flex-col gap-2 border-b border-ink/12 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
-        <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ink-soft dark:text-[#cfc2af]">
-          View Mode
-        </p>
-        <div
-          role="group"
-          aria-label="Expense view mode"
-          className="grid w-full grid-cols-2 border border-ink/15 bg-paper sm:w-auto dark:border-white/10 dark:bg-[#211b17]"
-        >
-          <button
-            type="button"
-            onClick={() => handleSwitchLayout("transactions_first")}
-            className={`px-2.5 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] transition-colors sm:px-3.5 sm:py-2 sm:text-[0.6rem] sm:tracking-[0.13em] ${
-              expenseLayout === "transactions_first"
-                ? "bg-ink text-paper dark:bg-[#f7eddd] dark:text-[#17120f]"
-                : "text-ink-soft hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
-            }`}
-          >
-            Transactions First
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSwitchLayout("categories_first")}
-            className={`border-l border-ink/15 px-2.5 py-2.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] transition-colors sm:px-3.5 sm:py-2 sm:text-[0.6rem] sm:tracking-[0.13em] dark:border-white/10 ${
-              expenseLayout === "categories_first"
-                ? "bg-ink text-paper dark:bg-[#f7eddd] dark:text-[#17120f]"
-                : "text-ink-soft hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
-            }`}
-          >
-            Categories First
-          </button>
-        </div>
-      </div>
 
       {expenseLayout === "categories_first" ? (
         <CategoriesFirstLayout {...layoutProps} />
