@@ -388,7 +388,7 @@ export default function ReportsPage() {
               <Skeleton className="h-2.5 w-28" />
               <Skeleton className="mt-2 h-6 w-44" />
               <div className="mt-8 grid grid-cols-2 gap-4">
-                <div className="border-l-2 border-ink/20 pl-4">
+                <div className="border-l-2 border-ink/20 pl-4 dark:border-white/20">
                   <Skeleton className="h-3 w-16" />
                   <Skeleton className="mt-3 h-7 w-28" />
                 </div>

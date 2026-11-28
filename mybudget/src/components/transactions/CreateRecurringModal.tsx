@@ -100,8 +100,8 @@ export function CreateRecurringModal({ transaction, existingRecurring, categorie
   }
 
   const labelClass = "text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft";
-  const inputClass = "mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep";
-  const selectClass = "mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep dark:bg-[#211b17]";
+  const inputClass = "mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep dark:border-white/15";
+  const selectClass = "mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep dark:border-white/15 dark:bg-[#211b17]";
 
   return (
     <div
@@ -130,7 +130,7 @@ export function CreateRecurringModal({ transaction, existingRecurring, categorie
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="grid size-9 shrink-0 place-items-center border border-ink/15 text-xl leading-none text-ink-soft hover:border-ink hover:text-ink dark:text-[#cfc2af]"
+            className="grid size-9 shrink-0 place-items-center border border-ink/15 text-xl leading-none text-ink-soft hover:border-ink hover:text-ink dark:border-white/15 dark:text-[#cfc2af] dark:hover:border-white/40 dark:hover:text-white"
           >
             ×
           </button>
@@ -173,8 +173,8 @@ export function CreateRecurringModal({ transaction, existingRecurring, categorie
           {/* Amount */}
           <label className="block">
             <span className={labelClass}>Amount <span className="text-ember-deep">*</span></span>
-            <div className="mt-2 flex border border-ink/15 focus-within:border-ember-deep">
-              <span className="grid w-10 place-items-center border-r border-ink/15 text-sm text-ink-soft">
+            <div className="mt-2 flex border border-ink/15 focus-within:border-ember-deep dark:border-white/15 dark:focus-within:border-ember-deep">
+              <span className="grid w-10 place-items-center border-r border-ink/15 text-sm text-ink-soft dark:border-white/15 dark:text-[#cfc2af]">
                 {getCurrencySymbol()}
               </span>
               <input
@@ -302,7 +302,7 @@ export function CreateRecurringModal({ transaction, existingRecurring, categorie
                 max="30"
                 value={reminderDays}
                 onChange={(e) => setReminderDays(e.target.value)}
-                className="w-16 border border-ink/15 bg-transparent px-2 py-1 text-sm outline-none focus:border-ember-deep"
+                className="w-16 border border-ink/15 bg-transparent px-2 py-1 text-sm outline-none focus:border-ember-deep dark:border-white/15"
               />
               <span className="text-ink-soft dark:text-[#cfc2af]">days before due date</span>
             </label>

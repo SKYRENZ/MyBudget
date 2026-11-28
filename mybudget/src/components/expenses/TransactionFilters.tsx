@@ -455,7 +455,7 @@ export function TransactionFilters({
                 type="button"
                 aria-label="Close filters"
                 onClick={() => setMobileOpen(false)}
-                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft"
+                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft dark:border-white/15 dark:text-[#cfc2af]"
               >
                 ×
               </button>

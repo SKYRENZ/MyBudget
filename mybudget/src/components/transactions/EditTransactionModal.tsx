@@ -69,7 +69,7 @@ export function EditTransactionModal({ transaction, categories, accounts, onClos
   }
 
   const labelClass = "text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft";
-  const inputClass = "mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep dark:bg-transparent";
+  const inputClass = "mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep dark:border-white/15 dark:bg-transparent";
 
   return (
     <div
@@ -98,7 +98,7 @@ export function EditTransactionModal({ transaction, categories, accounts, onClos
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="grid size-9 shrink-0 place-items-center border border-ink/15 text-xl leading-none text-ink-soft hover:border-ink hover:text-ink dark:text-[#cfc2af]"
+            className="grid size-9 shrink-0 place-items-center border border-ink/15 text-xl leading-none text-ink-soft hover:border-ink hover:text-ink dark:border-white/15 dark:text-[#cfc2af] dark:hover:border-white/40 dark:hover:text-white"
           >
             ×
           </button>
@@ -132,8 +132,8 @@ export function EditTransactionModal({ transaction, categories, accounts, onClos
 
           <label className="block">
             <span className={labelClass}>Amount</span>
-            <div className="mt-2 flex border border-ink/15 focus-within:border-ember-deep">
-              <span className="grid w-10 place-items-center border-r border-ink/15 text-sm text-ink-soft">
+            <div className="mt-2 flex border border-ink/15 focus-within:border-ember-deep dark:border-white/15 dark:focus-within:border-ember-deep">
+              <span className="grid w-10 place-items-center border-r border-ink/15 text-sm text-ink-soft dark:border-white/15 dark:text-[#cfc2af]">
                 {getCurrencySymbol()}
               </span>
               <input
@@ -166,7 +166,7 @@ export function EditTransactionModal({ transaction, categories, accounts, onClos
               disabled={!editable}
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep disabled:opacity-60 dark:bg-[#211b17]"
+              className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep disabled:opacity-60 dark:border-white/15 dark:bg-[#211b17]"
             >
               <option value="">No category</option>
               {categories.map((cat) => (
@@ -181,7 +181,7 @@ export function EditTransactionModal({ transaction, categories, accounts, onClos
               disabled={!editable}
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep disabled:opacity-60 dark:bg-[#211b17]"
+              className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep disabled:opacity-60 dark:border-white/15 dark:bg-[#211b17]"
             >
               <option value="">No account</option>
               {accounts.map((acc) => (

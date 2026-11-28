@@ -252,7 +252,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={triggerTutorialReplay}
               aria-label="Open tutorial"
               title="Setup tutorial"
-              className="grid size-9 place-items-center border border-ink/15 text-xs font-bold hover:border-ink/40"
+              className="grid size-9 place-items-center border border-ink/15 text-xs font-bold hover:border-ink/40 dark:border-white/15 dark:hover:border-white/35"
             >
               ?
             </button>
@@ -260,7 +260,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={toggleTheme}
               aria-label="Toggle dark mode"
-              className="grid size-9 place-items-center border border-ink/15 text-sm hover:border-ink/40"
+              className="grid size-9 place-items-center border border-ink/15 text-sm hover:border-ink/40 dark:border-white/15 dark:hover:border-white/35"
             >
               {dark ? "☀" : "☾"}
             </button>
@@ -273,7 +273,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className={`grid size-9 place-items-center border transition-colors ${
                 hideAmounts
                   ? "border-ember-deep bg-ember-deep/10 text-ember-deep"
-                  : "border-ink/15 hover:border-ink/40"
+                  : "border-ink/15 hover:border-ink/40 dark:border-white/15 dark:hover:border-white/35"
               }`}
             >
               {hideAmounts ? (
@@ -314,7 +314,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={openSettings}
               aria-label="Open settings"
-              className="grid size-9 place-items-center border border-ink/15 text-sm hover:border-ink/40"
+              className="grid size-9 place-items-center border border-ink/15 text-sm hover:border-ink/40 dark:border-white/15 dark:hover:border-white/35"
             >
               ⚙
             </button>

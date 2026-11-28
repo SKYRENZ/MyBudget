@@ -717,7 +717,7 @@ export default function ExpensesPage() {
                 type="button"
                 aria-label="Close expense form"
                 onClick={() => setShowExpenseForm(false)}
-                className="grid size-9 shrink-0 place-items-center border border-ink/15 text-xl leading-none text-ink-soft hover:border-ink hover:text-ink dark:text-[#cfc2af]"
+                className="grid size-9 shrink-0 place-items-center border border-ink/15 dark:border-white/15 text-xl leading-none text-ink-soft hover:border-ink hover:text-ink dark:text-[#cfc2af]"
               >
                 ×
               </button>
@@ -733,15 +733,15 @@ export default function ExpensesPage() {
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="Groceries, rent, utilities…"
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
               <label className="block">
                 <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
                   Amount
                 </span>
-                <div className="mt-2 flex border border-ink/15 focus-within:border-ember-deep">
-                  <span className="grid w-10 place-items-center border-r border-ink/15 text-sm text-ink-soft">
+                <div className="mt-2 flex border border-ink/15 dark:border-white/15 focus-within:border-ember-deep">
+                  <span className="grid w-10 place-items-center border-r border-ink/15 dark:border-white/15 text-sm text-ink-soft">
                     {getCurrencySymbol()}
                   </span>
                   <input
@@ -763,7 +763,7 @@ export default function ExpensesPage() {
                   type="date"
                   value={transactionDate}
                   onChange={(event) => setTransactionDate(event.target.value)}
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
               <label className="block">
@@ -773,7 +773,7 @@ export default function ExpensesPage() {
                 <select
                   value={categoryId}
                   onChange={(event) => setCategoryId(event.target.value)}
-                  className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep dark:bg-[#211b17]"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep dark:bg-[#211b17]"
                 >
                   <option value="">No category</option>
                   {categories.map((category) => (
@@ -790,7 +790,7 @@ export default function ExpensesPage() {
                 <select
                   value={accountId}
                   onChange={(event) => setAccountId(event.target.value)}
-                  className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep dark:bg-[#211b17]"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm outline-none focus:border-ember-deep dark:bg-[#211b17]"
                 >
                   <option value="">No account</option>
                   {accounts.map((account) => (
@@ -832,7 +832,7 @@ export default function ExpensesPage() {
             aria-labelledby="income-dialog-title"
             className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-xl sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
-            <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
                   Money in
@@ -845,7 +845,7 @@ export default function ExpensesPage() {
                 type="button"
                 aria-label="Close income form"
                 onClick={() => setShowIncomeForm(false)}
-                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft"
+                className="grid size-9 place-items-center border border-ink/15 dark:border-white/15 text-xl text-ink-soft"
               >
                 ×
               </button>
@@ -860,7 +860,7 @@ export default function ExpensesPage() {
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="Salary, freelance, refund…"
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
               <label className="block">
@@ -874,7 +874,7 @@ export default function ExpensesPage() {
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
               <label className="block">
@@ -885,7 +885,7 @@ export default function ExpensesPage() {
                   type="date"
                   value={transactionDate}
                   onChange={(event) => setTransactionDate(event.target.value)}
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
               <label className="block sm:col-span-2">
@@ -895,7 +895,7 @@ export default function ExpensesPage() {
                 <select
                   value={accountId}
                   onChange={(event) => setAccountId(event.target.value)}
-                  className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none dark:bg-[#211b17]"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm outline-none dark:bg-[#211b17]"
                 >
                   <option value="">No account</option>
                   {accounts.map((account) => (
@@ -911,7 +911,7 @@ export default function ExpensesPage() {
                 {error}
               </p>
             ) : null}
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setShowIncomeForm(false)}>Cancel</ActionButton>
               <ActionButton primary onClick={submitIncome}>
                 {saving ? "Saving…" : "Add income"}
@@ -935,7 +935,7 @@ export default function ExpensesPage() {
             aria-labelledby="category-dialog-title"
             className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
-            <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
                   Organization
@@ -948,7 +948,7 @@ export default function ExpensesPage() {
                 type="button"
                 aria-label="Close category form"
                 onClick={() => setShowCategoryForm(false)}
-                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft"
+                className="grid size-9 place-items-center border border-ink/15 dark:border-white/15 text-xl text-ink-soft"
               >
                 ×
               </button>
@@ -964,7 +964,7 @@ export default function ExpensesPage() {
                     value={categoryName}
                     onChange={(event) => setCategoryName(event.target.value)}
                     placeholder="Pets, gifts, childcare…"
-                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                   />
                 </label>
                 <label className="block">
@@ -976,7 +976,7 @@ export default function ExpensesPage() {
                     onChange={(event) => setCategoryIcon(event.target.value)}
                     placeholder="🍽️"
                     maxLength={8}
-                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-center text-sm outline-none focus:border-ember-deep"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-center text-sm outline-none focus:border-ember-deep"
                   />
                 </label>
               </div>
@@ -991,7 +991,7 @@ export default function ExpensesPage() {
                   value={categoryBudget}
                   onChange={(event) => setCategoryBudget(event.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
               <CategoryColorPicker
@@ -1006,7 +1006,7 @@ export default function ExpensesPage() {
                 {error}
               </p>
             ) : null}
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setShowCategoryForm(false)}>Cancel</ActionButton>
               <ActionButton primary onClick={submitCategory}>
                 {saving ? "Saving…" : "Add category"}
@@ -1030,7 +1030,7 @@ export default function ExpensesPage() {
             aria-labelledby="budget-dialog-title"
             className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
-            <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
                   Monthly planning
@@ -1043,7 +1043,7 @@ export default function ExpensesPage() {
                 type="button"
                 aria-label="Close budget form"
                 onClick={() => setShowBudgetForm(false)}
-                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft"
+                className="grid size-9 place-items-center border border-ink/15 dark:border-white/15 text-xl text-ink-soft"
               >
                 ×
               </button>
@@ -1056,7 +1056,7 @@ export default function ExpensesPage() {
                 <select
                   value={budgetCategoryId}
                   onChange={(event) => setBudgetCategoryId(event.target.value)}
-                  className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none dark:bg-[#211b17]"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm outline-none dark:bg-[#211b17]"
                 >
                   <option value="">Select category</option>
                   {categories.map((category) => (
@@ -1077,7 +1077,7 @@ export default function ExpensesPage() {
                   value={budgetLimit}
                   onChange={(event) => setBudgetLimit(event.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
             </div>
@@ -1086,7 +1086,7 @@ export default function ExpensesPage() {
                 {error}
               </p>
             ) : null}
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setShowBudgetForm(false)}>Cancel</ActionButton>
               <ActionButton primary onClick={submitBudgets}>
                 {saving ? "Saving…" : "Save limit"}
@@ -1110,7 +1110,7 @@ export default function ExpensesPage() {
             aria-labelledby="import-dialog-title"
             className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
-            <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-ember-deep">
                   CSV import
@@ -1123,7 +1123,7 @@ export default function ExpensesPage() {
                 type="button"
                 aria-label="Close CSV import"
                 onClick={() => setShowImportForm(false)}
-                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft"
+                className="grid size-9 place-items-center border border-ink/15 dark:border-white/15 text-xl text-ink-soft"
               >
                 ×
               </button>
@@ -1140,7 +1140,7 @@ export default function ExpensesPage() {
                   const file = event.target.files?.[0];
                   if (file) void importCsv(file);
                 }}
-                className="mt-5 block w-full border border-ink/15 px-3 py-3 text-sm file:mr-4 file:border-0 file:bg-ember-deep file:px-3 file:py-2 file:text-xs file:font-bold file:uppercase file:text-white"
+                className="mt-5 block w-full border border-ink/15 dark:border-white/15 px-3 py-3 text-sm file:mr-4 file:border-0 file:bg-ember-deep file:px-3 file:py-2 file:text-xs file:font-bold file:uppercase file:text-white"
               />
             </div>
             {error ? (
@@ -1148,7 +1148,7 @@ export default function ExpensesPage() {
                 {error}
               </p>
             ) : null}
-            <div className="flex justify-end border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setShowImportForm(false)}>Close</ActionButton>
             </div>
           </section>

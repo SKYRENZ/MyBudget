@@ -197,7 +197,7 @@ export default function AccountsPage() {
                     <Skeleton className="h-3 w-16" />
                   </div>
                   <Skeleton className="mt-8 h-8 w-36" />
-                  <div className="mt-3 border-t border-ink/10 pt-3">
+                  <div className="mt-3 border-t border-ink/10 dark:border-white/10 pt-3">
                     <Skeleton className="h-3 w-28" />
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export default function AccountsPage() {
               <p className="mt-8 text-3xl font-bold">
                 {formatCurrency(Number(account.balance), "accounts")}
               </p>
-              <p className="mt-2 border-t border-ink/10 pt-3 text-xs text-ink-soft">
+              <p className="mt-2 border-t border-ink/10 dark:border-white/10 pt-3 text-xs text-ink-soft">
                 Added{" "}
                 {new Date(account.created_at).toLocaleDateString()}
               </p>
@@ -265,7 +265,7 @@ export default function AccountsPage() {
             aria-labelledby="account-dialog-title"
             className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
-            <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
                   Money locations
@@ -285,7 +285,7 @@ export default function AccountsPage() {
                 type="button"
                 aria-label="Close account dialog"
                 onClick={() => setDialog(null)}
-                className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft"
+                className="grid size-9 place-items-center border border-ink/15 dark:border-white/15 text-xl text-ink-soft"
               >
                 ×
               </button>
@@ -301,7 +301,7 @@ export default function AccountsPage() {
                     autoFocus
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm"
                   />
                 </label>
                 <label className="block">
@@ -311,7 +311,7 @@ export default function AccountsPage() {
                   <select
                     value={type}
                     onChange={(event) => setType(event.target.value as (typeof accountTypes)[number])}
-                    className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"
                   >
                     {accountTypes.map((item) => (
                       <option key={item} value={item}>
@@ -330,7 +330,7 @@ export default function AccountsPage() {
                     value={balance}
                     onChange={(event) => setBalance(event.target.value)}
                     disabled={Boolean(editing)}
-                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm disabled:cursor-not-allowed disabled:bg-ink/5 disabled:opacity-75 dark:disabled:bg-white/5"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm disabled:cursor-not-allowed disabled:bg-ink/5 disabled:opacity-75 dark:disabled:bg-white/5"
                   />
                   {editing ? (
                     <span className="mt-1 block text-[0.62rem] text-ink-soft">
@@ -346,7 +346,7 @@ export default function AccountsPage() {
                     type="color"
                     value={color}
                     onChange={(event) => setColor(event.target.value)}
-                    className="mt-2 h-11 w-full border border-ink/15 bg-transparent p-1"
+                    className="mt-2 h-11 w-full border border-ink/15 dark:border-white/15 bg-transparent p-1"
                   />
                 </label>
               </div>
@@ -359,7 +359,7 @@ export default function AccountsPage() {
                   <select
                     value={fromAccountId}
                     onChange={(event) => setFromAccountId(event.target.value)}
-                    className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"
                   >
                     <option value="">Select account</option>
                     {accounts.map((account) => (
@@ -376,7 +376,7 @@ export default function AccountsPage() {
                   <select
                     value={toAccountId}
                     onChange={(event) => setToAccountId(event.target.value)}
-                    className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"
                   >
                     <option value="">Select account</option>
                     {accounts.map((account) => (
@@ -396,7 +396,7 @@ export default function AccountsPage() {
                     step="0.01"
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm"
+                    className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm"
                   />
                 </label>
               </div>
@@ -407,7 +407,7 @@ export default function AccountsPage() {
                 {error}
               </p>
             ) : null}
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setDialog(null)}>Cancel</ActionButton>
               <ActionButton primary onClick={dialog === "account" ? submitAccount : submitTransfer}>
                 {saving
@@ -437,7 +437,7 @@ export default function AccountsPage() {
             aria-labelledby="delete-account-title"
             className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
-            <div className="border-b border-ink/15 px-5 py-4 sm:px-6">
+            <div className="border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-red-700 dark:text-red-400">
                 Confirm deletion
               </p>
@@ -452,7 +452,7 @@ export default function AccountsPage() {
                 undone.
               </p>
             </div>
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setDeleteTarget(null)}>Cancel</ActionButton>
               <button
                 type="button"
