@@ -1,0 +1,56 @@
+[
+  {
+    "version": "0.1.1",
+    "releaseDate": "November 2026",
+    "title": "Backup & Restore, Journal UX & Account Management",
+    "summary": "Backup & Restore, account management, floating transaction details, category customization, and other improvements are now available.",
+    "type": "patch",
+    "added": [
+      "Backup & Restore System",
+      "JSON Backup Export",
+      "Data Restore Validation",
+      "Merge & Replace Restore Modes",
+      "Floating Transaction Detail Cards",
+      "Date-Grouped Transaction Feed",
+      "Category Color Customization",
+      "Account Management",
+      "Password Management",
+      "10 Per-Page Pagination Option",
+      "MMM D Date Format Option"
+    ],
+    "improved": [
+      "Mobile Transaction Experience",
+      "Overview Recent Transactions Compactness",
+      "Settings Organization",
+      "Privacy Controls",
+      "Category Sorting",
+      "User Preference Management",
+      "Dark Mode Border Contrast"
+    ],
+    "fixed": [
+      "User Settings Synchronization Bug",
+      "Shared Preference Issue",
+      "Layout Persistence Problems",
+      "Session Refresh Race Condition",
+      "Mobile Bottom Navigation Overlap on Detail Sheet"
+    ]
+  },
+  {
+    "version": "0.1.0",
+    "releaseDate": "November 2026",
+    "title": "Initial Release",
+    "type": "minor",
+    "added": [
+      "Dashboard",
+      "Expenses",
+      "Planning",
+      "Reports",
+      "Accounts",
+      "Categories",
+      "Savings Goals",
+      "Budget Tracking"
+    ],
+    "improved": [],
+    "fixed": []
+  }
+]

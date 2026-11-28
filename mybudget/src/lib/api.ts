@@ -144,6 +144,7 @@ export const api = {
           defaultAmountVisibility?: "show" | "hide";
           autoHideOnStartup?: boolean;
           transactionInteraction?: "floating" | "inline";
+          lastSeenVersion?: string;
         };
       }>,
     update: (body: {
@@ -165,6 +166,7 @@ export const api = {
       defaultAmountVisibility?: "show" | "hide";
       autoHideOnStartup?: boolean;
       transactionInteraction?: "floating" | "inline";
+      lastSeenVersion?: string;
     }) =>
       authorizedFetch("/api/preferences", { method: "PUT", body: JSON.stringify(body) }),
   },
@@ -262,5 +264,44 @@ export const api = {
       if (year) params.set("year", String(year));
       return authorizedFetch(`/api/budgets${params.size ? `?${params}` : ""}`);
     },
+  },
+  backup: {
+    download: async (localSettings?: Record<string, unknown>) => {
+      const response = await fetch("/api/backup", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ local_settings: localSettings }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error || "Failed to create backup.");
+      }
+      const disposition = response.headers.get("Content-Disposition") ?? "";
+      const match = /filename="([^"]+)"/.exec(disposition);
+      const filename = match?.[1] ?? `mybudget-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const blob = await response.blob();
+      return { blob, filename };
+    },
+    restore: (body: {
+      backup: unknown;
+      mode: "merge" | "replace";
+      conflictStrategy?: "skip" | "merge" | "rename";
+      confirmation?: string;
+    }) =>
+      authorizedFetch("/api/backup/restore", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }) as Promise<{
+        ok: boolean;
+        mode: "merge" | "replace";
+        restored: Record<string, number>;
+        skipped: Record<string, number>;
+        settings?: {
+          preferences?: Record<string, unknown>;
+          privacy?: Record<string, boolean>;
+          local_settings?: Record<string, unknown> | null;
+        };
+      }>,
   },
 };

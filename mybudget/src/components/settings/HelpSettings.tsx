@@ -1,10 +1,16 @@
 "use client";
 
+import { useState } from "react";
+import { ChangelogModal } from "@/components/settings/ChangelogModal";
+import { APP_VERSION } from "@/lib/changelog";
+
 type HelpSettingsProps = {
   onReplayTutorial: () => void;
 };
 
 export function HelpSettings({ onReplayTutorial }: HelpSettingsProps) {
+  const [changelogOpen, setChangelogOpen] = useState(false);
+
   return (
     <div className="grid gap-6">
       <section>
@@ -69,16 +75,27 @@ export function HelpSettings({ onReplayTutorial }: HelpSettingsProps) {
           <p className="mt-1 text-xs text-ink-soft dark:text-[#cfc2af]">
             A premium personal finance journal for deliberate spending.
           </p>
-          <div className="mt-3 flex items-center gap-3">
-            <span className="border border-ink/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-ink-soft dark:border-white/10 dark:text-[#cfc2af]">
-              v0.1.0
-            </span>
-            <span className="text-xs text-ink-soft dark:text-[#cfc2af]">
-              Built with Next.js &amp; Supabase
-            </span>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="border border-ink/15 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-ink-soft dark:border-white/10 dark:text-[#cfc2af]">
+                v{APP_VERSION}
+              </span>
+              <span className="text-xs text-ink-soft dark:text-[#cfc2af]">
+                Built with Next.js &amp; Supabase
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setChangelogOpen(true)}
+              className="shrink-0 border border-ink/15 px-3.5 py-1.5 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-ember-deep transition-colors hover:border-ember-deep dark:border-white/15 dark:hover:border-ember-deep"
+            >
+              What&apos;s New
+            </button>
           </div>
         </div>
       </section>
+
+      <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} />
     </div>
   );
 }

@@ -27,6 +27,7 @@ export type UserPreferencesPayload = {
   defaultAmountVisibility?: "show" | "hide";
   autoHideOnStartup?: boolean;
   transactionInteraction?: "floating" | "inline";
+  lastSeenVersion?: string;
 };
 
 const VALID_CATEGORY_SORTS: CategorySortPreference[] = [
@@ -94,6 +95,9 @@ function sanitizePreferences(raw: unknown): UserPreferencesPayload {
   }
   if (obj.transactionInteraction === "floating" || obj.transactionInteraction === "inline") {
     clean.transactionInteraction = obj.transactionInteraction;
+  }
+  if (typeof obj.lastSeenVersion === "string" && /^\d+\.\d+\.\d+$/.test(obj.lastSeenVersion.trim())) {
+    clean.lastSeenVersion = obj.lastSeenVersion.trim();
   }
 
   return clean;
