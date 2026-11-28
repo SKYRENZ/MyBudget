@@ -1,8 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { X } from "lucide-react";
 import { api } from "@/lib/api";
+import {
+  APP_VERSION,
+  getLastSeenVersionSnapshot,
+  getServerLastSeenVersionSnapshot,
+  hasUnseenRelease,
+  LATEST_RELEASE,
+  subscribeLastSeenVersion,
+  updateLastSeenVersion,
+} from "@/lib/changelog";
+import { ChangelogModal } from "@/components/settings/ChangelogModal";
 import {
   MonthlyCashFlowChart,
   type DailyCashFlowPoint,
@@ -50,6 +61,12 @@ type DashboardData = {
 export function DashboardPage() {
   useHideAmounts();
   usePrivacyConfig();
+  const lastSeenVersion = useSyncExternalStore(
+    subscribeLastSeenVersion,
+    getLastSeenVersionSnapshot,
+    getServerLastSeenVersionSnapshot,
+  );
+  const [changelogOpen, setChangelogOpen] = useState(false);
   const [data, setData] = useState<DashboardData | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -187,6 +204,55 @@ export function DashboardPage() {
           Your financial snapshot for this month.
         </p>
       </header>
+
+      {hasUnseenRelease(lastSeenVersion) ? (
+        <section
+          aria-label="What's new"
+          className="mt-5 border border-ink/15 border-l-4 border-l-ember-deep bg-paper p-4 sm:p-5 dark:border-white/10 dark:border-l-ember-deep dark:bg-[#211b17]"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
+                What&apos;s New
+              </p>
+              <h2 className="mt-1 font-display text-lg font-bold">
+                Version {APP_VERSION}
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-ink-soft dark:text-[#cfc2af]">
+                {LATEST_RELEASE?.summary ||
+                  "New features, improvements, and bug fixes are now available."}
+              </p>
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangelogOpen(true);
+                    updateLastSeenVersion(APP_VERSION);
+                    void api.preferences.update({ lastSeenVersion: APP_VERSION }).catch(() => {});
+                  }}
+                  className="border border-ink/20 px-3.5 py-1.5 text-[0.58rem] font-bold uppercase tracking-[0.14em] text-ember-deep transition-colors hover:border-ember-deep dark:border-white/15 dark:hover:border-ember-deep"
+                >
+                  View Changelog
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label="Dismiss update notification"
+              onClick={() => {
+                updateLastSeenVersion(APP_VERSION);
+                void api.preferences.update({ lastSeenVersion: APP_VERSION }).catch(() => {});
+              }}
+              className="shrink-0 p-1 text-ink-soft transition-colors hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      <ChangelogModal open={changelogOpen} onClose={() => setChangelogOpen(false)} />
+
       {error ? (
         <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">
           {error}

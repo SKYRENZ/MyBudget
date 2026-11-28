@@ -34,6 +34,7 @@ import {
   updateTransactionDisplayMode,
   updateTransactionInteraction,
 } from "@/lib/transaction-preferences";
+import { updateLastSeenVersion } from "@/lib/changelog";
 
 const nav = [
   ["Overview", "/dashboard"],
@@ -157,6 +158,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 updateAutoHideOnStartup(preferences.autoHideOnStartup);
               if (preferences.transactionInteraction)
                 updateTransactionInteraction(preferences.transactionInteraction);
+              if (preferences.lastSeenVersion)
+                updateLastSeenVersion(preferences.lastSeenVersion);
 
               const autoHide =
                 typeof preferences.autoHideOnStartup === "boolean"
