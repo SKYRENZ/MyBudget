@@ -3,16 +3,29 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import { formatDisplayDate, useDateFormat } from "@/lib/app-preferences";
 import {
   MonthlyCashFlowChart,
   type DailyCashFlowPoint,
 } from "@/components/dashboard/MonthlyCashFlowChart";
 import { toLocalDateKey } from "@/components/reports/chart-utils";
 import { Container } from "@/components/ui/Container";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCurrency } from "@/lib/currency";
 import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
+
+function getTimeGreeting(date: Date): string {
+  const hour = date.getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
+function getDisplayFirstName(fullName?: string | null, username?: string | null): string | null {
+  const raw = fullName?.trim() || username?.trim() || "";
+  if (!raw) return null;
+  return raw.split(/\s+/)[0] || null;
+}
 
 type DashboardData = {
   transactions: Array<{
@@ -38,18 +51,33 @@ type DashboardData = {
 export function DashboardPage() {
   useHideAmounts();
   usePrivacyConfig();
+  const dateFormat = useDateFormat();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const current = new Date();
-    api.dashboard(current.getMonth() + 1, current.getFullYear())
-      .then((dashboardData) => {
+    Promise.all([
+      api.dashboard(current.getMonth() + 1, current.getFullYear()),
+      api.profile.get().catch(() => null),
+    ])
+      .then(([dashboardData, profile]) => {
+        if (cancelled) return;
         setNow(current);
         setData(dashboardData);
+        setUserName(getDisplayFirstName(profile?.full_name, profile?.username));
       })
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Could not load dashboard"));
+      .catch((reason) => {
+        if (cancelled) return;
+        setNow(current);
+        setError(reason instanceof Error ? reason.message : "Could not load dashboard");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const transactions = useMemo(() => data?.transactions ?? [], [data]);
@@ -115,13 +143,52 @@ export function DashboardPage() {
     return points;
   }, [now, transactions]);
 
+  const greetingText = now
+    ? userName
+      ? `${getTimeGreeting(now)}, ${userName}.`
+      : "Welcome back."
+    : "";
+  const monthYearLabel = now
+    ? now.toLocaleDateString("en-US", { month: "long", year: "numeric" }).toUpperCase()
+    : "";
+  const fullDateLabel = now
+    ? now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+    : "";
+
   return (
     <Container>
-      <PageHeader
-        eyebrow="Monthly overview"
-        title="Overview"
-        description="Your live financial position, across every account and category."
-      />
+      <header className="border-b border-ink/15 pb-6 pt-8 sm:pt-10 dark:border-white/10">
+        {now ? (
+          <>
+            <p className="text-sm font-medium tracking-wide text-ink-soft dark:text-[#cfc2af]">
+              {greetingText}
+            </p>
+            <div className="mt-3 flex flex-col gap-0.5">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-ember-deep">
+                {monthYearLabel}
+              </p>
+              <p className="text-xs font-medium text-ink-soft dark:text-[#cfc2af]">
+                {fullDateLabel}
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-2.5">
+            <Skeleton className="h-4 w-40" />
+            <div className="space-y-1.5 pt-1">
+              <Skeleton className="h-2.5 w-28" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+          </div>
+        )}
+
+        <h1 className="mt-4 font-display text-4xl font-bold leading-none sm:text-5xl">
+          Overview
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-ink-soft dark:text-[#cfc2af]">
+          Your financial snapshot for this month.
+        </p>
+      </header>
       {error ? (
         <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">
           {error}
@@ -311,7 +378,7 @@ export function DashboardPage() {
                           {item.description || item.type}
                         </p>
                         <p className="mt-1 truncate text-xs text-ink-soft dark:text-[#cfc2af]">
-                          {item.categories?.name || "Uncategorized"} · {item.transaction_date}
+                          {item.categories?.name || "Uncategorized"} · {formatDisplayDate(item.transaction_date, dateFormat)}
                         </p>
                       </div>
                       <p

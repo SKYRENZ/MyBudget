@@ -84,6 +84,9 @@ export const api = {
         preferences: {
           expenseLayout?: "transactions_first" | "categories_first";
           transactionDisplay?: "pagination" | "infinite";
+          categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
+          dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+          budgetBehavior?: "carry_forward" | "manual";
           pageSize?: 25 | 50 | 100;
           defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
           defaultCategorySort?:
@@ -101,6 +104,9 @@ export const api = {
     update: (body: {
       expenseLayout?: "transactions_first" | "categories_first";
       transactionDisplay?: "pagination" | "infinite";
+      categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
+      dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+      budgetBehavior?: "carry_forward" | "manual";
       pageSize?: 25 | 50 | 100;
       defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
       defaultCategorySort?:
@@ -171,6 +177,20 @@ export const api = {
       }>;
     },
     create: (body: unknown) => authorizedFetch("/api/transactions", { method: "POST", body: JSON.stringify(body) }),
+    update: (id: string, body: unknown) => authorizedFetch(`/api/transactions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    delete: (id: string) => authorizedFetch(`/api/transactions/${id}`, { method: "DELETE" }),
+  },
+  recurringTransactions: {
+    list: (status?: string) => {
+      const params = status ? `?status=${status}` : "";
+      return authorizedFetch(`/api/recurring-transactions${params}`) as Promise<import("@/lib/database-types").RecurringTransaction[]>;
+    },
+    get: (id: string) => authorizedFetch(`/api/recurring-transactions/${id}`) as Promise<import("@/lib/database-types").RecurringTransaction>,
+    create: (body: unknown) => authorizedFetch("/api/recurring-transactions", { method: "POST", body: JSON.stringify(body) }) as Promise<import("@/lib/database-types").RecurringTransaction>,
+    update: (id: string, body: unknown) => authorizedFetch(`/api/recurring-transactions/${id}`, { method: "PUT", body: JSON.stringify(body) }) as Promise<import("@/lib/database-types").RecurringTransaction>,
+    delete: (id: string) => authorizedFetch(`/api/recurring-transactions/${id}`, { method: "DELETE" }),
+    pause: (id: string) => authorizedFetch(`/api/recurring-transactions/${id}`, { method: "PUT", body: JSON.stringify({ status: "paused" }) }),
+    resume: (id: string) => authorizedFetch(`/api/recurring-transactions/${id}`, { method: "PUT", body: JSON.stringify({ status: "active" }) }),
   },
   savingsGoals: {
     list: () => authorizedFetch("/api/savings-goals"),

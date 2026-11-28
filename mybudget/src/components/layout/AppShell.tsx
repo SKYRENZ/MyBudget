@@ -9,6 +9,8 @@ import { Container } from "@/components/ui/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { api, clearLegacyAuthStorage } from "@/lib/api";
 import {
+  updateBudgetBehavior,
+  updateDateFormat,
   updateDefaultCategorySort,
   updateDefaultPageSize,
   updateDefaultSort,
@@ -28,6 +30,7 @@ import {
   getServerTransactionDisplaySnapshot,
   getTransactionDisplaySnapshot,
   subscribeTransactionDisplayMode,
+  updateCategoryIndicatorStyle,
   updateTransactionDisplayMode,
 } from "@/lib/transaction-preferences";
 
@@ -139,6 +142,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               if (preferences.expenseLayout) updateExpenseLayout(preferences.expenseLayout);
               if (preferences.transactionDisplay)
                 updateTransactionDisplayMode(preferences.transactionDisplay);
+              if (preferences.categoryIndicatorStyle)
+                updateCategoryIndicatorStyle(preferences.categoryIndicatorStyle);
+              if (preferences.dateFormat) updateDateFormat(preferences.dateFormat);
+              if (preferences.budgetBehavior) updateBudgetBehavior(preferences.budgetBehavior);
               if (preferences.pageSize) updateDefaultPageSize(preferences.pageSize);
               if (preferences.defaultSort) updateDefaultSort(preferences.defaultSort);
               if (preferences.defaultCategorySort)
@@ -222,7 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
             {nav.map(([label, href]) => {
-              const active = pathname === href;
+              const active = pathname === href || (href === "/savings" && pathname === "/recurring");
               return (
                 <Link
                   key={href}
@@ -328,7 +335,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link
             key={href}
             href={href}
-            className={`flex min-w-0 flex-col items-center gap-1 py-2 text-[0.5rem] font-bold uppercase tracking-[0.08em] ${pathname === href ? "text-ember-deep" : "text-ink-soft dark:text-[#cfc2af]"}`}
+            className={`flex min-w-0 flex-col items-center gap-1 py-2 text-[0.5rem] font-bold uppercase tracking-[0.08em] ${pathname === href || (href === "/savings" && pathname === "/recurring") ? "text-ember-deep" : "text-ink-soft dark:text-[#cfc2af]"}`}
           >
             <span className="text-base">{label === "Overview" ? "◉" : label === "Expenses" ? "↗" : label === "Planning" ? "◎" : label === "Reports" ? "▥" : "▤"}</span>
             {label}

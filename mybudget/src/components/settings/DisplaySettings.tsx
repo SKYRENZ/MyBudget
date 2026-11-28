@@ -3,6 +3,14 @@
 import { useState, useSyncExternalStore } from "react";
 import { api } from "@/lib/api";
 import {
+  CATEGORY_INDICATOR_OPTIONS,
+  getCategoryIndicatorStyleSnapshot,
+  getServerCategoryIndicatorStyleSnapshot,
+  subscribeCategoryIndicatorStyle,
+  updateCategoryIndicatorStyle,
+  type CategoryIndicatorStyle,
+} from "@/lib/transaction-preferences";
+import {
   getAutoHideOnStartupSnapshot,
   getDefaultAmountVisibilitySnapshot,
   getServerAutoHideOnStartupSnapshot,
@@ -45,7 +53,17 @@ export function DisplaySettings() {
     getAutoHideOnStartupSnapshot,
     getServerAutoHideOnStartupSnapshot,
   );
+  const categoryIndicatorStyle = useSyncExternalStore(
+    subscribeCategoryIndicatorStyle,
+    getCategoryIndicatorStyleSnapshot,
+    getServerCategoryIndicatorStyleSnapshot,
+  );
   const privacyConfig = usePrivacyConfig();
+
+  function handleIndicatorStyleChange(style: CategoryIndicatorStyle) {
+    updateCategoryIndicatorStyle(style);
+    void api.preferences.update({ categoryIndicatorStyle: style }).catch(() => {});
+  }
 
   function handleSectionToggle(key: keyof PrivacyConfig, checked: boolean) {
     updatePrivacyConfig({ [key]: checked });
@@ -189,6 +207,49 @@ export function DisplaySettings() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Transactions — Category Indicator Style */}
+      <section className="border-t border-ink/15 pt-5 dark:border-white/10">
+        <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
+          Transactions
+        </p>
+        <h3 className="mt-0.5 font-display text-lg font-bold">Category Indicator Style</h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft dark:text-[#cfc2af]">
+          Choose how category colors appear in your transaction lists.
+        </p>
+
+        <fieldset className="mt-3">
+          <legend className="sr-only">Category Indicator Style</legend>
+          <div className="grid grid-cols-2 border border-ink/15 dark:border-white/10">
+            {CATEGORY_INDICATOR_OPTIONS.map((opt, idx) => {
+              const active = categoryIndicatorStyle === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleIndicatorStyleChange(opt.value)}
+                  className={`flex flex-col items-start gap-1 p-3 text-left transition-colors ${
+                    idx % 2 === 1 ? "border-l border-ink/15 dark:border-white/10" : ""
+                  } ${idx >= 2 ? "border-t border-ink/15 dark:border-white/10" : ""} ${
+                    active
+                      ? "bg-ink text-paper dark:bg-[#f7eddd] dark:text-[#17120f]"
+                      : "text-ink-soft hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
+                  }`}
+                >
+                  <span className="text-xs font-bold">{opt.label}</span>
+                  <span
+                    className={`text-[0.65rem] leading-snug ${
+                      active ? "opacity-80" : "text-ink-soft/80 dark:text-[#cfc2af]/75"
+                    }`}
+                  >
+                    {opt.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
       </section>
 
       {/* Compact Mode (placeholder) */}

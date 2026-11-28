@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { CategoryCustomizeSheet } from "@/components/expenses/CategoryCustomizeSheet";
+import { CategoryColorPicker } from "@/components/expenses/CategoryColorPicker";
+import { EditCategoryModal } from "@/components/expenses/EditCategoryModal";
 import {
   CategoriesFirstLayout,
   TransactionsFirstLayout,
 } from "@/components/expenses/ExpenseLayouts";
+import { DEFAULT_CATEGORY_COLOR, normalizeHexColor } from "@/lib/category-colors";
 import {
   DEFAULT_TRANSACTION_FILTERS,
   resolveDateRange,
@@ -15,6 +18,9 @@ import {
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EditTransactionModal } from "@/components/transactions/EditTransactionModal";
+import { DeleteTransactionModal } from "@/components/transactions/DeleteTransactionModal";
+import { CreateRecurringModal } from "@/components/transactions/CreateRecurringModal";
 import { api } from "@/lib/api";
 import {
   type CategorySort,
@@ -92,6 +98,11 @@ export default function ExpensesPage() {
   const [txLoading, setTxLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Transaction action modals
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
+  const [recurringTx, setRecurringTx] = useState<Transaction | null>(null);
+
   const [filters, setFilters] = useState<TransactionFilterState>(DEFAULT_TRANSACTION_FILTERS);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [now, setNow] = useState<Date | null>(null);
@@ -118,6 +129,9 @@ export default function ExpensesPage() {
   const [showImportForm, setShowImportForm] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [categoryBudget, setCategoryBudget] = useState("");
+  const [categoryColor, setCategoryColor] = useState(DEFAULT_CATEGORY_COLOR);
+  const [categoryIcon, setCategoryIcon] = useState("");
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [budgetCategoryId, setBudgetCategoryId] = useState("");
   const [budgetLimit, setBudgetLimit] = useState("");
 
@@ -393,11 +407,13 @@ export default function ExpensesPage() {
       await api.categories.create({
         name: categoryName.trim(),
         monthly_budget: numericBudget >= 0 ? toStoredUsd(numericBudget) : 0,
-        icon: null,
-        color: "#D97706",
+        icon: categoryIcon.trim() || null,
+        color: normalizeHexColor(categoryColor, DEFAULT_CATEGORY_COLOR),
       });
       setCategoryName("");
       setCategoryBudget("");
+      setCategoryColor(DEFAULT_CATEGORY_COLOR);
+      setCategoryIcon("");
       setShowCategoryForm(false);
       await loadMetadata();
     } catch (reason) {
@@ -589,11 +605,16 @@ export default function ExpensesPage() {
     onPageChange: (nextPage: number) => void fetchTransactionsPage(nextPage, false),
     onLoadMore: () => void fetchTransactionsPage(page + 1, true),
     onEditBudget: openEditBudget,
+    onEditCategory: (cat: Category) => setEditingCategory(cat),
     onCategorySortChange: (sort: CategorySort) => setCategorySortOverride(sort),
     onOpenCustomize: () => setShowCustomizeSheet(true),
+    onEditTransaction: (tx: Transaction) => setEditingTx(tx),
+    onDeleteTransaction: (tx: Transaction) => setDeletingTx(tx),
+    onCreateRecurring: (tx: Transaction) => setRecurringTx(tx),
   };
 
   return (
+    <>
     <Container>
       <PageHeader
         eyebrow="Cash flow"
@@ -932,20 +953,34 @@ export default function ExpensesPage() {
                 ×
               </button>
             </div>
-            <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
-              <label className="block sm:col-span-2">
-                <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
-                  Category name
-                </span>
-                <input
-                  autoFocus
-                  value={categoryName}
-                  onChange={(event) => setCategoryName(event.target.value)}
-                  placeholder="Pets, gifts, childcare…"
-                  className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
-                />
-              </label>
-              <label className="block sm:col-span-2">
+            <div className="grid gap-4 p-5 sm:p-6">
+              <div className="grid gap-4 sm:grid-cols-[1fr_110px]">
+                <label className="block">
+                  <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
+                    Category name
+                  </span>
+                  <input
+                    autoFocus
+                    value={categoryName}
+                    onChange={(event) => setCategoryName(event.target.value)}
+                    placeholder="Pets, gifts, childcare…"
+                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
+                    Icon
+                  </span>
+                  <input
+                    value={categoryIcon}
+                    onChange={(event) => setCategoryIcon(event.target.value)}
+                    placeholder="🍽️"
+                    maxLength={8}
+                    className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-center text-sm outline-none focus:border-ember-deep"
+                  />
+                </label>
+              </div>
+              <label className="block">
                 <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">
                   Monthly budget
                 </span>
@@ -959,6 +994,12 @@ export default function ExpensesPage() {
                   className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep"
                 />
               </label>
+              <CategoryColorPicker
+                value={categoryColor}
+                onChange={setCategoryColor}
+                previewName={categoryName || "Food"}
+                previewIcon={categoryIcon}
+              />
             </div>
             {error ? (
               <p className="mx-5 mb-4 border border-red-700/20 bg-red-50 px-3 py-2 text-sm text-red-800 sm:mx-6">
@@ -1114,5 +1155,40 @@ export default function ExpensesPage() {
         </div>
       ) : null}
     </Container>
+
+    {/* Transaction action modals */}
+    {editingTx && (
+      <EditTransactionModal
+        transaction={editingTx}
+        categories={categories}
+        accounts={accounts}
+        onClose={() => setEditingTx(null)}
+        onSaved={() => void refreshAll()}
+      />
+    )}
+    {deletingTx && (
+      <DeleteTransactionModal
+        transaction={deletingTx}
+        onClose={() => setDeletingTx(null)}
+        onDeleted={() => void refreshAll()}
+      />
+    )}
+    {recurringTx && (
+      <CreateRecurringModal
+        transaction={recurringTx}
+        categories={categories}
+        accounts={accounts}
+        onClose={() => setRecurringTx(null)}
+        onSaved={() => {}}
+      />
+    )}
+    {editingCategory && (
+      <EditCategoryModal
+        category={editingCategory}
+        onClose={() => setEditingCategory(null)}
+        onSaved={() => void refreshAll()}
+      />
+    )}
+    </>
   );
 }

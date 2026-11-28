@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { api } from "@/lib/api";
 import {
   getCurrencySettings,
   updateCurrencySettings,
@@ -29,6 +30,7 @@ export function GeneralSettings() {
       usdToPhp: Number.isFinite(rate) && rate > 0 ? rate : 56,
     });
     updateDateFormat(dateFormat);
+    void api.preferences.update({ dateFormat }).catch(() => {});
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   }
@@ -142,7 +144,7 @@ export function GeneralSettings() {
           </div>
         </fieldset>
         <p className="mt-2 text-xs text-ink-soft dark:text-[#cfc2af]">
-          Date format preference — full integration coming soon.
+          Controls how dates are displayed across transactions, dashboard, and reports.
         </p>
       </section>
 

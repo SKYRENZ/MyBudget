@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -265,7 +266,7 @@ export default function SavingsPage() {
       <PageHeader
         eyebrow="Future planning"
         title="Planning"
-        description="Manage savings funds and long-term financial goals in one place."
+        description="Manage savings funds, long-term financial goals and recurring transactions."
         actions={
           <span data-tour="planning-actions" className="inline-flex flex-wrap gap-2">
             <ActionButton primary onClick={() => { resetFormFields(); setDialog("contribution"); }}>Add contribution</ActionButton>
@@ -274,6 +275,21 @@ export default function SavingsPage() {
           </span>
         }
       />
+
+      <div className="mt-5 flex gap-0 border-b border-ink/12 dark:border-white/10">
+        <Link
+          href="/savings"
+          className="border-b-2 border-ember-deep px-4 py-2.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-ember-deep"
+        >
+          Savings &amp; Goals
+        </Link>
+        <Link
+          href="/recurring"
+          className="border-b-2 border-transparent px-4 py-2.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-ink dark:text-[#cfc2af]"
+        >
+          Recurring Transactions
+        </Link>
+      </div>
 
       {error ? <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">{error}</p> : null}
 

@@ -22,9 +22,10 @@ import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
-import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
+import { formatDisplayDate, useDateFormat } from "@/lib/app-preferences";
+import { formatCurrency } from "@/lib/currency";
 import type { DashboardData, FinancialGoal, Transaction } from "@/lib/database-types";
-import { MASKED_AMOUNT, useSectionHidden } from "@/lib/privacy-preferences";
+import { useSectionHidden } from "@/lib/privacy-preferences";
 
 type ReportsDashboardData = DashboardData & {
   budgets?: Array<{
@@ -41,6 +42,7 @@ const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as cons
 
 export default function ReportsPage() {
   const hideReports = useSectionHidden("reports");
+  const dateFormat = useDateFormat();
   const [data, setData] = useState<ReportsDashboardData | null>(null);
   const [financialGoals, setFinancialGoals] = useState<FinancialGoal[]>([]);
   const [error, setError] = useState("");
@@ -122,6 +124,19 @@ export default function ReportsPage() {
     return months;
   }, [now, transactions]);
 
+  const categoryColors = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const cat of data?.categories ?? []) {
+      map[cat.name] = cat.color ?? null;
+    }
+    for (const row of transactions) {
+      if (row.categories?.name && row.categories?.color) {
+        map[row.categories.name] = row.categories.color;
+      }
+    }
+    return map;
+  }, [data?.categories, transactions]);
+
   const expenseBreakdown = useMemo<ExpenseSlice[]>(() => {
     if (expenses <= 0 || sortedCategories.length === 0) return [];
     const primary = sortedCategories.slice(0, 5);
@@ -132,8 +147,9 @@ export default function ReportsPage() {
       name,
       value,
       percent: Number(((value / expenses) * 100).toFixed(1)),
+      color: name === "Other" ? null : (categoryColors[name] ?? null),
     }));
-  }, [expenses, sortedCategories]);
+  }, [categoryColors, expenses, sortedCategories]);
 
   const weekdaySpending = useMemo<WeekdaySpendingPoint[]>(() => {
     const totals = [0, 0, 0, 0, 0, 0, 0];
@@ -313,7 +329,7 @@ export default function ReportsPage() {
     }
 
     return list;
-  }, [data, expenses, financialGoals, hideReports, income, now, savingsRate, sixMonthTrend, transactions]);
+  }, [data, expenses, financialGoals, income, now, savingsRate, sixMonthTrend, transactions]);
 
   function exportCsv() {
     const lines = [
@@ -478,22 +494,35 @@ export default function ReportsPage() {
               <h2 className="font-display text-xl font-bold">Top spending categories</h2>
               {topCategories.length ? (
                 <ul className="mt-5 space-y-4">
-                  {topCategories.map(([name, amount]) => (
-                    <li key={name}>
-                      <div className="flex justify-between text-sm">
-                        <b>{name}</b>
-                        <span className="tabular-nums">{formatCurrency(amount, "reports")}</span>
-                      </div>
-                      <div className="mt-2 h-1.5 bg-ink/10 dark:bg-white/10">
-                        <div
-                          className="h-full bg-ember-deep"
-                          style={{
-                            width: `${expenses ? Math.max(4, Math.round((amount / expenses) * 100)) : 0}%`,
-                          }}
-                        />
-                      </div>
-                    </li>
-                  ))}
+                  {topCategories.map(([name, amount]) => {
+                    const catColor = categoryColors[name] ?? null;
+                    return (
+                      <li key={name}>
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            {catColor ? (
+                              <span
+                                className="inline-block size-2.5 shrink-0 rounded-full"
+                                style={{ backgroundColor: catColor }}
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                            <b>{name}</b>
+                          </span>
+                          <span className="tabular-nums">{formatCurrency(amount, "reports")}</span>
+                        </div>
+                        <div className="mt-2 h-1.5 bg-ink/10 dark:bg-white/10">
+                          <div
+                            className="h-full bg-ember-deep"
+                            style={{
+                              width: `${expenses ? Math.max(4, Math.round((amount / expenses) * 100)) : 0}%`,
+                              backgroundColor: catColor ?? undefined,
+                            }}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="mt-5 text-sm text-ink-soft dark:text-[#cfc2af]">
@@ -514,7 +543,7 @@ export default function ReportsPage() {
                         <div className="min-w-0">
                           <b className="block truncate text-sm">{row.description || row.type}</b>
                           <p className="mt-1 text-xs text-ink-soft dark:text-[#cfc2af]">
-                            {row.transaction_date}
+                            {formatDisplayDate(row.transaction_date, dateFormat)}
                           </p>
                         </div>
                         <span className="shrink-0 font-bold tabular-nums">

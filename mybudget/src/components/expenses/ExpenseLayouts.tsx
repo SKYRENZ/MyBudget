@@ -1,16 +1,23 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useSyncExternalStore, type RefObject } from "react";
 import {
   TransactionFilters,
   type TransactionFilterState,
 } from "@/components/expenses/TransactionFilters";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { CATEGORY_SORT_OPTIONS, type CategorySort } from "@/lib/app-preferences";
+import { TransactionActionsMenu } from "@/components/transactions/TransactionActionsMenu";
+import { TransactionStatusIcons } from "@/components/transactions/TransactionStatusIcons";
+import { CATEGORY_SORT_OPTIONS, formatDisplayDate, useDateFormat, type CategorySort } from "@/lib/app-preferences";
 import { formatCurrency } from "@/lib/currency";
 import type { Account, Category, Transaction } from "@/lib/database-types";
 import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
-import type { TransactionDisplayMode } from "@/lib/transaction-preferences";
+import {
+  getCategoryIndicatorStyleSnapshot,
+  getServerCategoryIndicatorStyleSnapshot,
+  subscribeCategoryIndicatorStyle,
+  type TransactionDisplayMode,
+} from "@/lib/transaction-preferences";
 
 // ─── Shared props used by both layouts ───────────────────────────────────────
 export type ExpenseLayoutProps = {
@@ -40,8 +47,13 @@ export type ExpenseLayoutProps = {
   onPageChange: (p: number) => void;
   onLoadMore: () => void;
   onEditBudget: (category: Category) => void;
+  onEditCategory?: (category: Category) => void;
   onCategorySortChange: (sort: CategorySort) => void;
   onOpenCustomize: () => void;
+  // Transaction action callbacks
+  onEditTransaction?: (tx: Transaction) => void;
+  onDeleteTransaction?: (tx: Transaction) => void;
+  onCreateRecurring?: (tx: Transaction) => void;
 };
 
 // ─── Shared Transactions List (mobile + desktop) ──────────────────────────────
@@ -58,6 +70,9 @@ export function TransactionList({
   onPageSizeChange,
   onLoadMore,
   loadMoreSentinelRef,
+  onEditTransaction,
+  onDeleteTransaction,
+  onCreateRecurring,
 }: {
   transactions: Transaction[];
   txLoading: boolean;
@@ -71,9 +86,20 @@ export function TransactionList({
   onPageSizeChange: (size: 25 | 50 | 100) => void;
   onLoadMore: () => void;
   loadMoreSentinelRef: React.RefObject<HTMLDivElement | null>;
+  onEditTransaction?: (tx: Transaction) => void;
+  onDeleteTransaction?: (tx: Transaction) => void;
+  onCreateRecurring?: (tx: Transaction) => void;
 }) {
   useHideAmounts();
   usePrivacyConfig();
+  const dateFormat = useDateFormat();
+  const indicatorStyle = useSyncExternalStore(
+    subscribeCategoryIndicatorStyle,
+    getCategoryIndicatorStyleSnapshot,
+    getServerCategoryIndicatorStyleSnapshot,
+  );
+  const showBar = indicatorStyle === "bar_dot" || indicatorStyle === "bar";
+  const showDot = indicatorStyle === "bar_dot" || indicatorStyle === "dot";
   const rangeStart = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd =
     displayMode === "infinite"
@@ -99,31 +125,57 @@ export function TransactionList({
             No matching transactions found.
           </p>
         ) : (
-          transactions.map((row) => (
-            <div key={row.id} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3.5">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">
-                  {row.description || (row.type === "income" ? "Income" : "Expense")}
-                </p>
-                <p className="mt-1 truncate text-xs text-ink-soft dark:text-[#cfc2af]">
-                  {row.categories?.name || row.type}
-                  {row.accounts?.name ? ` · ${row.accounts.name}` : ""} · {row.transaction_date}
-                </p>
-              </div>
-              <p
-                className={`shrink-0 text-sm font-bold tabular-nums ${
-                  row.type === "income"
-                    ? "text-green-700 dark:text-green-400"
-                    : row.type === "expense"
-                      ? "text-ember-deep"
-                      : ""
-                }`}
+          transactions.map((row) => {
+            const catColor = row.categories?.color ?? null;
+            return (
+              <div
+                key={row.id}
+                className="group flex min-w-0 items-center justify-between gap-3 px-4 py-3.5"
+                style={showBar && catColor ? { borderLeft: `3px solid ${catColor}` } : undefined}
               >
-                {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
-                {formatCurrency(Number(row.amount), "transactions")}
-              </p>
-            </div>
-          ))
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {row.description || (row.type === "income" ? "Income" : "Expense")}
+                  </p>
+                  <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-ink-soft dark:text-[#cfc2af]">
+                    {showDot && catColor ? (
+                      <span
+                        className="mr-0.5 inline-block size-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: catColor }}
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                    <span className="truncate">
+                      {row.categories?.icon ? `${row.categories.icon} ` : ""}
+                      {row.categories?.name || row.type}
+                      {row.accounts?.name ? ` · ${row.accounts.name}` : ""} · {formatDisplayDate(row.transaction_date, dateFormat)}
+                    </span>
+                    <TransactionStatusIcons transaction={row} />
+                  </p>
+                </div>
+                <p
+                  className={`shrink-0 text-sm font-bold tabular-nums ${
+                    row.type === "income"
+                      ? "text-green-700 dark:text-green-400"
+                      : row.type === "expense"
+                        ? "text-ember-deep"
+                        : ""
+                  }`}
+                >
+                  {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
+                  {formatCurrency(Number(row.amount), "transactions")}
+                </p>
+                {(onEditTransaction || onDeleteTransaction || onCreateRecurring) && (
+                  <TransactionActionsMenu
+                    transaction={row}
+                    onEdit={onEditTransaction ?? (() => {})}
+                    onDelete={onDeleteTransaction ?? (() => {})}
+                    onCreateRecurring={onCreateRecurring ?? (() => {})}
+                  />
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
@@ -138,6 +190,7 @@ export function TransactionList({
               <td>Account</td>
               <td>Date</td>
               <td className="px-5 text-right">Amount</td>
+              <td className="w-10" />
             </tr>
           </thead>
           <tbody>
@@ -162,33 +215,73 @@ export function TransactionList({
                     <td className="px-5 text-right">
                       <Skeleton className="ml-auto h-4 w-20" />
                     </td>
+                    <td />
                   </tr>
                 ))
-              : transactions.map((row) => (
-                  <tr key={row.id} className="border-t border-ink/10 dark:border-white/10">
-                    <td className="px-5 py-4 font-bold">
-                      {row.description || (row.type === "income" ? "Income" : "Expense")}
-                    </td>
-                    <td className="text-[0.62rem] uppercase tracking-[0.12em] text-ink-soft dark:text-[#cfc2af]">
-                      {row.type}
-                    </td>
-                    <td>{row.categories?.name || "—"}</td>
-                    <td>{row.accounts?.name || "—"}</td>
-                    <td className="tabular-nums">{row.transaction_date}</td>
-                    <td
-                      className={`px-5 text-right font-bold tabular-nums ${
-                        row.type === "income"
-                          ? "text-green-700 dark:text-green-400"
-                          : row.type === "expense"
-                            ? "text-ember-deep"
-                            : ""
-                      }`}
-                    >
-                      {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
-                      {formatCurrency(Number(row.amount), "transactions")}
-                    </td>
-                  </tr>
-                ))}
+              : transactions.map((row) => {
+                  const catColor = row.categories?.color ?? null;
+                  return (
+                    <tr key={row.id} className="group border-t border-ink/10 dark:border-white/10">
+                      <td
+                        className="px-5 py-4 font-bold"
+                        style={showBar && catColor ? { borderLeft: `3px solid ${catColor}` } : undefined}
+                      >
+                        {row.description || (row.type === "income" ? "Income" : "Expense")}
+                      </td>
+                      <td className="text-[0.62rem] uppercase tracking-[0.12em] text-ink-soft dark:text-[#cfc2af]">
+                        {row.type}
+                      </td>
+                      <td>
+                        {row.categories?.name ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            {showDot && catColor ? (
+                              <span
+                                className="inline-block size-2 shrink-0 rounded-full"
+                                style={{ backgroundColor: catColor }}
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                            <span>
+                              {row.categories.icon ? `${row.categories.icon} ` : ""}
+                              {row.categories.name}
+                            </span>
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td>{row.accounts?.name || "—"}</td>
+                      <td className="tabular-nums">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span>{formatDisplayDate(row.transaction_date, dateFormat)}</span>
+                          <TransactionStatusIcons transaction={row} />
+                        </span>
+                      </td>
+                      <td
+                        className={`px-5 text-right font-bold tabular-nums ${
+                          row.type === "income"
+                            ? "text-green-700 dark:text-green-400"
+                            : row.type === "expense"
+                              ? "text-ember-deep"
+                              : ""
+                        }`}
+                      >
+                        {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
+                        {formatCurrency(Number(row.amount), "transactions")}
+                      </td>
+                      <td className="pr-3">
+                        {(onEditTransaction || onDeleteTransaction || onCreateRecurring) && (
+                          <TransactionActionsMenu
+                            transaction={row}
+                            onEdit={onEditTransaction ?? (() => {})}
+                            onDelete={onDeleteTransaction ?? (() => {})}
+                            onCreateRecurring={onCreateRecurring ?? (() => {})}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
           </tbody>
         </table>
         {!txLoading && transactions.length === 0 ? (
@@ -312,10 +405,12 @@ export function CategoryBudgetCard({
   category,
   monthlyTransactions,
   onEditBudget,
+  onEditCategory,
 }: {
   category: Category;
   monthlyTransactions: Transaction[];
   onEditBudget: (cat: Category) => void;
+  onEditCategory?: (cat: Category) => void;
 }) {
   useHideAmounts();
   usePrivacyConfig();
@@ -325,9 +420,13 @@ export function CategoryBudgetCard({
   const limit = Number(category.monthly_budget);
   const percent = limit > 0 ? Number(((spent / limit) * 100).toFixed(1)) : 0;
   const isOver = percent > 100;
+  const accentColor = category.color ?? null;
 
   return (
-    <section className="min-w-0 border border-ink/15 bg-paper p-4 sm:p-5 dark:border-white/10 dark:bg-[#211b17]">
+    <section
+      className="min-w-0 border border-ink/15 bg-paper p-4 sm:p-5 dark:border-white/10 dark:bg-[#211b17]"
+      style={accentColor ? { borderTop: `3px solid ${accentColor}` } : undefined}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           {category.is_pinned ? (
@@ -335,7 +434,17 @@ export function CategoryBudgetCard({
               📌
             </span>
           ) : null}
-          <h2 className="truncate font-display text-lg font-bold">{category.name}</h2>
+          {accentColor ? (
+            <span
+              className="inline-block size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: accentColor }}
+              aria-hidden="true"
+            />
+          ) : null}
+          <h2 className="truncate font-display text-lg font-bold">
+            {category.icon ? `${category.icon} ` : ""}
+            {category.name}
+          </h2>
         </div>
         <span
           className={`shrink-0 text-xs font-bold ${isOver ? "text-red-600 dark:text-red-400" : "text-ink-soft dark:text-[#cfc2af]"}`}
@@ -346,7 +455,10 @@ export function CategoryBudgetCard({
       <div className="mt-4 h-1.5 bg-ink/10 dark:bg-white/10">
         <div
           className={`h-full transition-all ${isOver ? "bg-red-500" : "bg-ember-deep"}`}
-          style={{ width: `${Math.min(percent, 100)}%` }}
+          style={{
+            width: `${Math.min(percent, 100)}%`,
+            backgroundColor: !isOver && accentColor ? accentColor : undefined,
+          }}
         />
       </div>
       <div className="mt-4 grid grid-cols-2 text-xs">
@@ -365,13 +477,24 @@ export function CategoryBudgetCard({
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-ink/10 pt-3 text-[0.65rem] dark:border-white/10">
         <span className="text-ink-soft dark:text-[#cfc2af]">Limit {formatCurrency(limit, "category_budgets")}</span>
-        <button
-          type="button"
-          onClick={() => onEditBudget(category)}
-          className="font-bold uppercase tracking-[0.12em] text-ember-deep hover:underline"
-        >
-          Edit limit
-        </button>
+        <div className="flex items-center gap-3">
+          {onEditCategory ? (
+            <button
+              type="button"
+              onClick={() => onEditCategory(category)}
+              className="font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink hover:underline dark:text-[#cfc2af] dark:hover:text-white"
+            >
+              Edit
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onEditBudget(category)}
+            className="font-bold uppercase tracking-[0.12em] text-ember-deep hover:underline"
+          >
+            Edit limit
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -400,8 +523,12 @@ export function TransactionsFirstLayout({
   onPageChange,
   onLoadMore,
   onEditBudget,
+  onEditCategory,
   onCategorySortChange,
   onOpenCustomize,
+  onEditTransaction,
+  onDeleteTransaction,
+  onCreateRecurring,
 }: ExpenseLayoutProps) {
   // Category chip filter
   const activeCategoryName = categories.find((c) => c.id === filters.categoryId)?.name ?? null;
@@ -448,12 +575,21 @@ export function TransactionsFirstLayout({
                       categoryId: filters.categoryId === cat.id ? "" : cat.id,
                     })
                   }
-                  className={`shrink-0 border px-3 py-1.5 text-[0.6rem] font-bold uppercase tracking-[0.12em] transition-colors ${
+                  className={`inline-flex shrink-0 items-center gap-1.5 border px-3 py-1.5 text-[0.6rem] font-bold uppercase tracking-[0.12em] transition-colors ${
                     filters.categoryId === cat.id
                       ? "border-ember-deep bg-ember-deep text-white"
                       : "border-ink/20 text-ink-soft hover:border-ink/40 dark:border-white/15 dark:text-[#cfc2af]"
                   }`}
                 >
+                  {cat.color ? (
+                    <span
+                      className="inline-block size-2 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: filters.categoryId === cat.id ? "#ffffff" : cat.color,
+                      }}
+                      aria-hidden="true"
+                    />
+                  ) : null}
                   {cat.name}
                 </button>
               ))}
@@ -489,6 +625,9 @@ export function TransactionsFirstLayout({
           onPageSizeChange={onPageSizeChange}
           onLoadMore={onLoadMore}
           loadMoreSentinelRef={loadMoreSentinelRef}
+          onEditTransaction={onEditTransaction}
+          onDeleteTransaction={onDeleteTransaction}
+          onCreateRecurring={onCreateRecurring}
         />
       </section>
 
@@ -501,6 +640,7 @@ export function TransactionsFirstLayout({
         onCategorySortChange={onCategorySortChange}
         onOpenCustomize={onOpenCustomize}
         onEditBudget={onEditBudget}
+        onEditCategory={onEditCategory}
       />
     </div>
   );
@@ -515,6 +655,7 @@ function CollapsibleCategoryBudgets({
   onCategorySortChange,
   onOpenCustomize,
   onEditBudget,
+  onEditCategory,
 }: {
   categories: Category[];
   monthlyTransactions: Transaction[];
@@ -523,6 +664,7 @@ function CollapsibleCategoryBudgets({
   onCategorySortChange: (sort: CategorySort) => void;
   onOpenCustomize: () => void;
   onEditBudget: (cat: Category) => void;
+  onEditCategory?: (cat: Category) => void;
 }) {
   // No budget section if there are no categories yet
   if (!metaLoading && categories.length === 0) return null;
@@ -568,6 +710,7 @@ function CollapsibleCategoryBudgets({
                 category={cat}
                 monthlyTransactions={monthlyTransactions}
                 onEditBudget={onEditBudget}
+                onEditCategory={onEditCategory}
               />
             ))}
           </div>
@@ -600,8 +743,12 @@ export function CategoriesFirstLayout({
   onPageChange,
   onLoadMore,
   onEditBudget,
+  onEditCategory,
   onCategorySortChange,
   onOpenCustomize,
+  onEditTransaction,
+  onDeleteTransaction,
+  onCreateRecurring,
 }: ExpenseLayoutProps) {
   return (
     <div className="mt-6 grid min-w-0 gap-6">
@@ -661,6 +808,7 @@ export function CategoriesFirstLayout({
                 monthlyTransactions={monthlyTransactions}
                 allTransactions={transactions}
                 onEditBudget={onEditBudget}
+                onEditCategory={onEditCategory}
               />
             ))}
           </div>
@@ -702,6 +850,9 @@ export function CategoriesFirstLayout({
           onPageSizeChange={onPageSizeChange}
           onLoadMore={onLoadMore}
           loadMoreSentinelRef={loadMoreSentinelRef}
+          onEditTransaction={onEditTransaction}
+          onDeleteTransaction={onDeleteTransaction}
+          onCreateRecurring={onCreateRecurring}
         />
       </section>
     </div>
@@ -714,20 +865,24 @@ function ExpandableCategoryCard({
   monthlyTransactions,
   allTransactions,
   onEditBudget,
+  onEditCategory,
 }: {
   category: Category;
   monthlyTransactions: Transaction[];
   allTransactions: Transaction[];
   onEditBudget: (cat: Category) => void;
+  onEditCategory?: (cat: Category) => void;
 }) {
   useHideAmounts();
   usePrivacyConfig();
+  const dateFormat = useDateFormat();
   const spent = monthlyTransactions
     .filter((r) => r.type === "expense" && r.category_id === category.id)
     .reduce((s, r) => s + Number(r.amount), 0);
   const limit = Number(category.monthly_budget);
   const percent = limit > 0 ? Number(((spent / limit) * 100).toFixed(1)) : 0;
   const isOver = percent > 100;
+  const accentColor = category.color ?? null;
 
   // Recent transactions in this category (from server-fetched page)
   const catTxs = allTransactions
@@ -735,7 +890,10 @@ function ExpandableCategoryCard({
     .slice(0, 5);
 
   return (
-    <details className="group min-w-0 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]">
+    <details
+      className="group min-w-0 border border-ink/15 bg-paper dark:border-white/10 dark:bg-[#211b17]"
+      style={accentColor ? { borderTop: `3px solid ${accentColor}` } : undefined}
+    >
       <summary className="flex cursor-pointer list-none items-start gap-3 p-5">
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
@@ -745,7 +903,17 @@ function ExpandableCategoryCard({
                   📌
                 </span>
               ) : null}
-              <h3 className="truncate font-display text-base font-bold">{category.name}</h3>
+              {accentColor ? (
+                <span
+                  className="inline-block size-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: accentColor }}
+                  aria-hidden="true"
+                />
+              ) : null}
+              <h3 className="truncate font-display text-base font-bold">
+                {category.icon ? `${category.icon} ` : ""}
+                {category.name}
+              </h3>
             </div>
             <span
               className={`shrink-0 text-xs font-bold ${isOver ? "text-red-600 dark:text-red-400" : "text-ink-soft dark:text-[#cfc2af]"}`}
@@ -756,7 +924,10 @@ function ExpandableCategoryCard({
           <div className="mt-3 h-1.5 bg-ink/10 dark:bg-white/10">
             <div
               className={`h-full transition-all ${isOver ? "bg-red-500" : "bg-ember-deep"}`}
-              style={{ width: `${Math.min(percent, 100)}%` }}
+              style={{
+                width: `${Math.min(percent, 100)}%`,
+                backgroundColor: !isOver && accentColor ? accentColor : undefined,
+              }}
             />
           </div>
           <div className="mt-3 grid grid-cols-2 text-xs">
@@ -785,13 +956,24 @@ function ExpandableCategoryCard({
           <span className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-ink-soft dark:text-[#cfc2af]">
             Limit {formatCurrency(limit, "category_budgets")}
           </span>
-          <button
-            type="button"
-            onClick={() => onEditBudget(category)}
-            className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-ember-deep hover:underline"
-          >
-            Edit limit
-          </button>
+          <div className="flex items-center gap-3">
+            {onEditCategory ? (
+              <button
+                type="button"
+                onClick={() => onEditCategory(category)}
+                className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-ink-soft hover:text-ink hover:underline dark:text-[#cfc2af] dark:hover:text-white"
+              >
+                Edit
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => onEditBudget(category)}
+              className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-ember-deep hover:underline"
+            >
+              Edit limit
+            </button>
+          </div>
         </div>
 
         {catTxs.length > 0 ? (
@@ -803,7 +985,7 @@ function ExpandableCategoryCard({
                     {row.description || "Expense"}
                   </p>
                   <p className="text-[0.6rem] text-ink-soft dark:text-[#cfc2af]">
-                    {row.transaction_date}
+                    {formatDisplayDate(row.transaction_date, dateFormat)}
                   </p>
                 </div>
                 <p className="shrink-0 text-xs font-bold tabular-nums text-ember-deep">

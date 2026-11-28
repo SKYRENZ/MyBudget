@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AccountSettings } from "./AccountSettings";
+import { BudgetsSettings } from "./BudgetsSettings";
 import { DataSettings } from "./DataSettings";
 import { DisplaySettings } from "./DisplaySettings";
 import { ExpensesSettings } from "./ExpensesSettings";
@@ -12,6 +13,7 @@ type SettingsCategory =
   | "general"
   | "display"
   | "expenses"
+  | "budgets"
   | "account"
   | "data"
   | "help";
@@ -27,6 +29,7 @@ const CATEGORIES: CategoryMeta[] = [
   { id: "general", icon: "◎", label: "General", description: "Currency, language, date format" },
   { id: "display", icon: "▤", label: "Display", description: "Theme, compact mode, font scale" },
   { id: "expenses", icon: "↗", label: "Expenses", description: "Layout, display, sorting" },
+  { id: "budgets", icon: "◫", label: "Budgets", description: "Monthly lifecycle, carry-forward" },
   { id: "account", icon: "◉", label: "Account", description: "Profile, password, session" },
   { id: "data", icon: "▥", label: "Data", description: "Export CSV, PDF, backup" },
   { id: "help", icon: "?", label: "Help", description: "Tutorial, guide, about" },
@@ -82,6 +85,8 @@ export function SettingsPanel({
         return <DisplaySettings />;
       case "expenses":
         return <ExpensesSettings />;
+      case "budgets":
+        return <BudgetsSettings />;
       case "account":
         return (
           <AccountSettings

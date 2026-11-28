@@ -31,8 +31,45 @@ export type Transaction = {
   notes: string | null;
   transaction_date: string;
   created_at: string;
+  recurring_transaction_id?: string | null;
+  is_auto_generated?: boolean;
   accounts?: { name: string; type: string } | null;
   categories?: { name: string; color: string | null; icon: string | null } | null;
+};
+
+export type RecurringFrequency =
+  | "daily"
+  | "weekly"
+  | "biweekly"
+  | "monthly"
+  | "quarterly"
+  | "yearly"
+  | "custom";
+
+export type RecurringStatus = "active" | "paused" | "completed";
+
+export type RecurringTransaction = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: "income" | "expense";
+  amount: number | string;
+  category_id: string | null;
+  account_id: string | null;
+  description: string | null;
+  frequency: RecurringFrequency;
+  custom_days: number | null;
+  start_date: string;
+  end_date: string | null;
+  next_occurrence: string | null;
+  last_generated_at: string | null;
+  auto_create: boolean;
+  reminder_days: number;
+  status: RecurringStatus;
+  created_at: string;
+  updated_at: string;
+  categories?: { name: string; color: string | null; icon: string | null } | null;
+  accounts?: { name: string; type: string } | null;
 };
 
 export type SavingsGoal = {

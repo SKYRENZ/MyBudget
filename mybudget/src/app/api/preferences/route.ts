@@ -18,6 +18,9 @@ export type CategorySortPreference =
 export type UserPreferencesPayload = {
   expenseLayout?: "transactions_first" | "categories_first";
   transactionDisplay?: "pagination" | "infinite";
+  categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
+  dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+  budgetBehavior?: "carry_forward" | "manual";
   pageSize?: 25 | 50 | 100;
   defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
   defaultCategorySort?: CategorySortPreference;
@@ -45,6 +48,24 @@ function sanitizePreferences(raw: unknown): UserPreferencesPayload {
   }
   if (obj.transactionDisplay === "pagination" || obj.transactionDisplay === "infinite") {
     clean.transactionDisplay = obj.transactionDisplay;
+  }
+  if (
+    obj.categoryIndicatorStyle === "bar_dot" ||
+    obj.categoryIndicatorStyle === "bar" ||
+    obj.categoryIndicatorStyle === "dot" ||
+    obj.categoryIndicatorStyle === "minimal"
+  ) {
+    clean.categoryIndicatorStyle = obj.categoryIndicatorStyle;
+  }
+  if (
+    obj.dateFormat === "MM/DD/YYYY" ||
+    obj.dateFormat === "DD/MM/YYYY" ||
+    obj.dateFormat === "YYYY-MM-DD"
+  ) {
+    clean.dateFormat = obj.dateFormat;
+  }
+  if (obj.budgetBehavior === "carry_forward" || obj.budgetBehavior === "manual") {
+    clean.budgetBehavior = obj.budgetBehavior;
   }
   if (obj.pageSize === 25 || obj.pageSize === 50 || obj.pageSize === 100) {
     clean.pageSize = obj.pageSize;

@@ -9,6 +9,7 @@ export type ExpenseSlice = {
   name: string;
   value: number;
   percent: number;
+  color?: string | null;
 };
 
 type TooltipPayloadItem = {
@@ -65,7 +66,7 @@ export function ExpenseBreakdownChart({ data }: { data: ExpenseSlice[] }) {
               {data.map((slice, index) => (
                 <Cell
                   key={slice.name}
-                  fill={EDITORIAL_PALETTE[index % EDITORIAL_PALETTE.length]}
+                  fill={slice.color || EDITORIAL_PALETTE[index % EDITORIAL_PALETTE.length]}
                 />
               ))}
             </Pie>
@@ -80,7 +81,7 @@ export function ExpenseBreakdownChart({ data }: { data: ExpenseSlice[] }) {
             <span className="flex min-w-0 items-center gap-2">
               <span
                 className="inline-block size-2.5 shrink-0"
-                style={{ backgroundColor: EDITORIAL_PALETTE[index % EDITORIAL_PALETTE.length] }}
+                style={{ backgroundColor: slice.color || EDITORIAL_PALETTE[index % EDITORIAL_PALETTE.length] }}
               />
               <span className="truncate font-medium">{slice.name}</span>
             </span>

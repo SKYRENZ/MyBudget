@@ -2,13 +2,13 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // Supabase client (public anon key, environment vars should be set)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "public-anon-key";
-let supabaseClient = null as any;
-function getSupabase() {
+let supabaseClient: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient {
   if (!supabaseClient) {
     supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
@@ -19,7 +19,10 @@ const supabase = getSupabase();
 
 // Synchronous helper to get current user ID (if Supabase session is available)
 function getCurrentUserIdSync(): string | null {
-  const session = (supabase.auth.session as any)?.();
+  const authWithLegacySession = supabase.auth as unknown as {
+    session?: () => { user?: { id?: string } } | null;
+  };
+  const session = authWithLegacySession.session?.();
   return session?.user?.id ?? null;
 }
 
@@ -36,21 +39,6 @@ export type UserPreferencesPayload = {
   dateFormat?: DateFormat;
   defaultCategorySort?: CategorySort;
 };
-
-async function getUserPreferences(): Promise<UserPreferencesPayload> {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) return {};
-  // @ts-ignore – user_metadata may be any
-  return data.user.user_metadata?.preferences ?? {};
-}
-
-async function updateUserPreferences(patch: Partial<UserPreferencesPayload>) {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) return;
-  const existing = data.user.user_metadata?.preferences ?? {};
-  const merged = { ...existing, ...patch };
-  await supabase.auth.updateUser({ data: { preferences: merged } });
-}
 
 // ─── Expense Layout ──────────────────────────────────────────────────────────────
 export type ExpenseLayout = "transactions_first" | "categories_first";
@@ -195,6 +183,34 @@ export function getServerDateFormatSnapshot(): DateFormat {
   return "MM/DD/YYYY";
 }
 
+export function useDateFormat(): DateFormat {
+  return useSyncExternalStore(
+    subscribeDateFormat,
+    getDateFormatSnapshot,
+    getServerDateFormatSnapshot,
+  );
+}
+
+export function formatDisplayDate(
+  dateStr: string | null | undefined,
+  format?: DateFormat,
+): string {
+  if (!dateStr) return "—";
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr.trim());
+  if (!match) return dateStr;
+  const [, year, month, day] = match;
+  const activeFormat = format ?? getDateFormat();
+  switch (activeFormat) {
+    case "DD/MM/YYYY":
+      return `${day}/${month}/${year}`;
+    case "YYYY-MM-DD":
+      return `${year}-${month}-${day}`;
+    case "MM/DD/YYYY":
+    default:
+      return `${month}/${day}/${year}`;
+  }
+}
+
 // ─── Default Category Sort ──────────────────────────────────────────────────────
 export type CategorySort =
   | "manual"
@@ -247,4 +263,48 @@ export function getDefaultCategorySortSnapshot(): CategorySort {
 }
 export function getServerDefaultCategorySortSnapshot(): CategorySort {
   return "manual";
+}
+
+// ─── Monthly Budget Behavior ────────────────────────────────────────────────────
+export type BudgetBehavior = "carry_forward" | "manual";
+const BUDGET_BEHAVIOR_KEY = "mybudget-budget-behavior";
+const BUDGET_BEHAVIOR_EVENT = "mybudget-budget-behavior-change";
+
+export function getBudgetBehavior(): BudgetBehavior {
+  const userId = getCurrentUserIdSync();
+  if (typeof window === "undefined") return "carry_forward";
+  const stored = window.localStorage.getItem(scopedKey(BUDGET_BEHAVIOR_KEY, userId));
+  return stored === "manual" ? "manual" : "carry_forward";
+}
+
+export function updateBudgetBehavior(behavior: BudgetBehavior) {
+  const userId = getCurrentUserIdSync();
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(scopedKey(BUDGET_BEHAVIOR_KEY, userId), behavior);
+  window.dispatchEvent(new Event(BUDGET_BEHAVIOR_EVENT));
+}
+
+export function subscribeBudgetBehavior(callback: () => void) {
+  window.addEventListener(BUDGET_BEHAVIOR_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(BUDGET_BEHAVIOR_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+export function getBudgetBehaviorSnapshot(): BudgetBehavior {
+  return getBudgetBehavior();
+}
+
+export function getServerBudgetBehaviorSnapshot(): BudgetBehavior {
+  return "carry_forward";
+}
+
+export function useBudgetBehavior(): BudgetBehavior {
+  return useSyncExternalStore(
+    subscribeBudgetBehavior,
+    getBudgetBehaviorSnapshot,
+    getServerBudgetBehaviorSnapshot,
+  );
 }
