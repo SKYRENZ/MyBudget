@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { CATEGORY_SORT_OPTIONS, type CategorySort } from "@/lib/app-preferences";
 import { formatCurrency } from "@/lib/currency";
 import type { Account, Category, Transaction } from "@/lib/database-types";
+import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
 import type { TransactionDisplayMode } from "@/lib/transaction-preferences";
 
 // ─── Shared props used by both layouts ───────────────────────────────────────
@@ -71,6 +72,8 @@ export function TransactionList({
   onLoadMore: () => void;
   loadMoreSentinelRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  useHideAmounts();
+  usePrivacyConfig();
   const rangeStart = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd =
     displayMode === "infinite"
@@ -117,7 +120,7 @@ export function TransactionList({
                 }`}
               >
                 {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
-                {formatCurrency(Number(row.amount))}
+                {formatCurrency(Number(row.amount), "transactions")}
               </p>
             </div>
           ))
@@ -182,7 +185,7 @@ export function TransactionList({
                       }`}
                     >
                       {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
-                      {formatCurrency(Number(row.amount))}
+                      {formatCurrency(Number(row.amount), "transactions")}
                     </td>
                   </tr>
                 ))}
@@ -314,6 +317,8 @@ export function CategoryBudgetCard({
   monthlyTransactions: Transaction[];
   onEditBudget: (cat: Category) => void;
 }) {
+  useHideAmounts();
+  usePrivacyConfig();
   const spent = monthlyTransactions
     .filter((r) => r.type === "expense" && r.category_id === category.id)
     .reduce((s, r) => s + Number(r.amount), 0);
@@ -348,18 +353,18 @@ export function CategoryBudgetCard({
         <div>
           <p className="text-ink-soft dark:text-[#cfc2af]">Spent</p>
           <b className={isOver ? "text-red-600 dark:text-red-400" : undefined}>
-            {formatCurrency(spent)}
+            {formatCurrency(spent, "category_budgets")}
           </b>
         </div>
         <div className="text-right">
           <p className="text-ink-soft dark:text-[#cfc2af]">Remaining</p>
           <b className={isOver ? "text-red-600 dark:text-red-400" : undefined}>
-            {formatCurrency(limit - spent)}
+            {formatCurrency(limit - spent, "category_budgets")}
           </b>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-ink/10 pt-3 text-[0.65rem] dark:border-white/10">
-        <span className="text-ink-soft dark:text-[#cfc2af]">Limit {formatCurrency(limit)}</span>
+        <span className="text-ink-soft dark:text-[#cfc2af]">Limit {formatCurrency(limit, "category_budgets")}</span>
         <button
           type="button"
           onClick={() => onEditBudget(category)}
@@ -715,6 +720,8 @@ function ExpandableCategoryCard({
   allTransactions: Transaction[];
   onEditBudget: (cat: Category) => void;
 }) {
+  useHideAmounts();
+  usePrivacyConfig();
   const spent = monthlyTransactions
     .filter((r) => r.type === "expense" && r.category_id === category.id)
     .reduce((s, r) => s + Number(r.amount), 0);
@@ -756,13 +763,13 @@ function ExpandableCategoryCard({
             <div>
               <p className="text-ink-soft dark:text-[#cfc2af]">Spent</p>
               <b className={isOver ? "text-red-600 dark:text-red-400" : undefined}>
-                {formatCurrency(spent)}
+                {formatCurrency(spent, "category_budgets")}
               </b>
             </div>
             <div className="text-right">
               <p className="text-ink-soft dark:text-[#cfc2af]">Remaining</p>
               <b className={isOver ? "text-red-600 dark:text-red-400" : undefined}>
-                {formatCurrency(limit - spent)}
+                {formatCurrency(limit - spent, "category_budgets")}
               </b>
             </div>
           </div>
@@ -776,7 +783,7 @@ function ExpandableCategoryCard({
       <div className="border-t border-ink/10 dark:border-white/10">
         <div className="flex items-center justify-between px-5 py-3">
           <span className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-ink-soft dark:text-[#cfc2af]">
-            Limit {formatCurrency(limit)}
+            Limit {formatCurrency(limit, "category_budgets")}
           </span>
           <button
             type="button"
@@ -800,7 +807,7 @@ function ExpandableCategoryCard({
                   </p>
                 </div>
                 <p className="shrink-0 text-xs font-bold tabular-nums text-ember-deep">
-                  −{formatCurrency(Number(row.amount))}
+                  −{formatCurrency(Number(row.amount), "transactions")}
                 </p>
               </div>
             ))}

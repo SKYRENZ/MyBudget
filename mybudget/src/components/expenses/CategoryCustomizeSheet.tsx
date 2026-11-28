@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { formatCurrency } from "@/lib/currency";
 import type { Category } from "@/lib/database-types";
+import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
 
 type CategoryCustomizeSheetProps = {
   open: boolean;
@@ -29,6 +30,8 @@ export function CategoryCustomizeSheet({
   onClose,
   onCommit,
 }: CategoryCustomizeSheetProps) {
+  useHideAmounts();
+  usePrivacyConfig();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [localOrder, setLocalOrder] = useState<Category[] | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -207,7 +210,7 @@ export function CategoryCustomizeSheet({
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-display text-base font-bold">{cat.name}</p>
                         <p className="text-[0.65rem] text-ink-soft dark:text-[#cfc2af]">
-                          Limit {formatCurrency(Number(cat.monthly_budget))}
+                          Limit {formatCurrency(Number(cat.monthly_budget), "category_budgets")}
                         </p>
                       </div>
 

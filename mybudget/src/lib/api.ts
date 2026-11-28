@@ -57,8 +57,25 @@ export const api = {
         full_name: string | null;
         username: string | null;
         is_new_user?: number | boolean | null;
+        hide_amounts?: boolean;
+        hide_dashboard?: boolean;
+        hide_category_budgets?: boolean;
+        hide_transactions?: boolean;
+        hide_accounts?: boolean;
+        hide_goals_savings?: boolean;
+        hide_reports?: boolean;
       }>,
-    update: (body: { full_name?: string; is_new_user?: number }) =>
+    update: (body: {
+      full_name?: string;
+      is_new_user?: number;
+      hide_amounts?: boolean;
+      hide_dashboard?: boolean;
+      hide_category_budgets?: boolean;
+      hide_transactions?: boolean;
+      hide_accounts?: boolean;
+      hide_goals_savings?: boolean;
+      hide_reports?: boolean;
+    }) =>
       authorizedFetch("/api/profile", { method: "PUT", body: JSON.stringify(body) }),
   },
   preferences: {
@@ -77,6 +94,8 @@ export const api = {
             | "remaining_asc"
             | "name_asc"
             | "name_desc";
+          defaultAmountVisibility?: "show" | "hide";
+          autoHideOnStartup?: boolean;
         };
       }>,
     update: (body: {
@@ -92,6 +111,8 @@ export const api = {
         | "remaining_asc"
         | "name_asc"
         | "name_desc";
+      defaultAmountVisibility?: "show" | "hide";
+      autoHideOnStartup?: boolean;
     }) =>
       authorizedFetch("/api/preferences", { method: "PUT", body: JSON.stringify(body) }),
   },

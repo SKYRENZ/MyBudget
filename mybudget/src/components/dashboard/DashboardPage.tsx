@@ -12,6 +12,7 @@ import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatCurrency } from "@/lib/currency";
+import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
 
 type DashboardData = {
   transactions: Array<{
@@ -35,6 +36,8 @@ type DashboardData = {
 };
 
 export function DashboardPage() {
+  useHideAmounts();
+  usePrivacyConfig();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState<Date | null>(null);
@@ -211,7 +214,7 @@ export function DashboardPage() {
                   {label}
                 </p>
                 <p className="mt-4 font-display text-2xl font-bold tabular-nums">
-                  {formatCurrency(Number(value))}
+                  {formatCurrency(Number(value), "dashboard")}
                 </p>
               </section>
             ))}
@@ -242,7 +245,7 @@ export function DashboardPage() {
                   Total spent today
                 </p>
                 <p className="mt-2 font-display text-2xl font-bold tabular-nums">
-                  {formatCurrency(todayStats.totalSpentToday)}
+                  {formatCurrency(todayStats.totalSpentToday, "dashboard")}
                 </p>
               </div>
 
@@ -262,7 +265,7 @@ export function DashboardPage() {
                 {todayStats.largestExpense ? (
                   <>
                     <p className="mt-2 font-display text-2xl font-bold tabular-nums">
-                      {formatCurrency(Number(todayStats.largestExpense.amount))}
+                      {formatCurrency(Number(todayStats.largestExpense.amount), "dashboard")}
                     </p>
                     <p className="mt-1 truncate text-xs text-ink-soft dark:text-[#cfc2af]">
                       {todayStats.largestExpense.description ||
@@ -321,7 +324,7 @@ export function DashboardPage() {
                         }`}
                       >
                         {item.type === "income" ? "+" : item.type === "expense" ? "−" : ""}
-                        {formatCurrency(Number(item.amount))}
+                        {formatCurrency(Number(item.amount), "transactions")}
                       </p>
                     </li>
                   ))}

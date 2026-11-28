@@ -1,4 +1,5 @@
 import { getCurrencySymbol, toDisplayAmount } from "@/lib/currency";
+import { isSectionHidden, type PrivacySection } from "@/lib/privacy-preferences";
 
 export const EDITORIAL_PALETTE = [
   "#b85f24", // ember-deep
@@ -13,7 +14,10 @@ export const EDITORIAL_PALETTE = [
 /**
  * Formats a stored-currency numeric value for compact chart Y-axis ticks.
  */
-export function formatAxisCurrency(value: number): string {
+export function formatAxisCurrency(value: number, section?: PrivacySection): string {
+  if (isSectionHidden(section)) {
+    return "••••";
+  }
   const converted = toDisplayAmount(value);
   const symbol = getCurrencySymbol();
   const abs = Math.abs(converted);

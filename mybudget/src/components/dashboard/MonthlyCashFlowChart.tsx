@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { formatAxisCurrency } from "@/components/reports/chart-utils";
 import { formatCurrency } from "@/lib/currency";
+import { useSectionHidden, type PrivacySection } from "@/lib/privacy-preferences";
 
 export type DailyCashFlowPoint = {
   day: string;
@@ -30,9 +31,11 @@ type TooltipPayloadItem = {
 function CashFlowTooltip({
   active,
   payload,
+  privacySection,
 }: {
   active?: boolean;
   payload?: TooltipPayloadItem[];
+  privacySection: PrivacySection;
 }) {
   if (!active || !payload?.length) return null;
   const point = payload[0]?.payload;
@@ -53,7 +56,7 @@ function CashFlowTooltip({
               {entry.name}
             </span>
             <span className="font-semibold tabular-nums text-ink dark:text-[#f7eddd]">
-              {formatCurrency(Number(entry.value ?? 0))}
+              {formatCurrency(Number(entry.value ?? 0), privacySection)}
             </span>
           </div>
         ))}
@@ -62,7 +65,14 @@ function CashFlowTooltip({
   );
 }
 
-export function MonthlyCashFlowChart({ data }: { data: DailyCashFlowPoint[] }) {
+export function MonthlyCashFlowChart({
+  data,
+  privacySection = "dashboard",
+}: {
+  data: DailyCashFlowPoint[];
+  privacySection?: PrivacySection;
+}) {
+  const hideAmounts = useSectionHidden(privacySection);
   const hasMovement = data.some((point) => point.income > 0 || point.expenses > 0);
 
   if (!hasMovement) {
@@ -101,10 +111,10 @@ export function MonthlyCashFlowChart({ data }: { data: DailyCashFlowPoint[] }) {
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 10, fill: "#6b4a2c" }}
-              tickFormatter={formatAxisCurrency}
+              tickFormatter={(value) => (hideAmounts ? "••••" : formatAxisCurrency(value, privacySection))}
               width={52}
             />
-            <Tooltip content={<CashFlowTooltip />} />
+            <Tooltip content={<CashFlowTooltip privacySection={privacySection} />} />
             <Area
               type="monotone"
               dataKey="income"

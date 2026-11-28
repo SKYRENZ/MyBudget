@@ -3,6 +3,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { EDITORIAL_PALETTE } from "@/components/reports/chart-utils";
 import { formatCurrency } from "@/lib/currency";
+import { useSectionHidden } from "@/lib/privacy-preferences";
 
 export type ExpenseSlice = {
   name: string;
@@ -29,13 +30,14 @@ function BreakdownTooltip({
     <div className="border border-ink/20 bg-paper px-3 py-2 text-xs shadow-sm dark:border-white/15 dark:bg-[#211b17]">
       <p className="font-semibold text-ink dark:text-[#f7eddd]">{slice.name}</p>
       <p className="mt-1 tabular-nums text-ink-soft dark:text-[#cfc2af]">
-        {formatCurrency(slice.value)} · {slice.percent}%
+        {formatCurrency(slice.value, "reports")} · {slice.percent}%
       </p>
     </div>
   );
 }
 
 export function ExpenseBreakdownChart({ data }: { data: ExpenseSlice[] }) {
+  useSectionHidden("reports");
   if (!data.length) {
     return (
       <p className="mt-5 text-sm text-ink-soft dark:text-[#cfc2af]">

@@ -22,8 +22,9 @@ import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 import type { DashboardData, FinancialGoal, Transaction } from "@/lib/database-types";
+import { MASKED_AMOUNT, useSectionHidden } from "@/lib/privacy-preferences";
 
 type ReportsDashboardData = DashboardData & {
   budgets?: Array<{
@@ -39,6 +40,7 @@ type ReportsDashboardData = DashboardData & {
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
 export default function ReportsPage() {
+  const hideReports = useSectionHidden("reports");
   const [data, setData] = useState<ReportsDashboardData | null>(null);
   const [financialGoals, setFinancialGoals] = useState<FinancialGoal[]>([]);
   const [error, setError] = useState("");
@@ -164,7 +166,7 @@ export default function ReportsPage() {
           id: "monthly-spending-change",
           tag: "Monthly spending",
           title: `Spending is up ${pct}% compared to ${previousMonth.month}`,
-          detail: `You have spent ${formatCurrency(currentMonth.expenses)} so far in ${currentMonth.month}, up from ${formatCurrency(previousMonth.expenses)} in ${previousMonth.month}.`,
+          detail: `You have spent ${fmt(currentMonth.expenses)} so far in ${currentMonth.month}, up from ${fmt(previousMonth.expenses)} in ${previousMonth.month}.`,
           tone: pct >= 15 ? "warning" : "neutral",
         });
       } else if (diff < 0) {
@@ -172,7 +174,7 @@ export default function ReportsPage() {
           id: "monthly-spending-change",
           tag: "Monthly spending",
           title: `Spending is down ${pct}% from ${previousMonth.month}`,
-          detail: `Current expenses of ${formatCurrency(currentMonth.expenses)} are ${formatCurrency(Math.abs(diff))} lower than ${previousMonth.month}.`,
+          detail: `Current expenses of ${fmt(currentMonth.expenses)} are ${fmt(Math.abs(diff))} lower than ${previousMonth.month}.`,
           tone: "positive",
         });
       } else {
@@ -180,7 +182,7 @@ export default function ReportsPage() {
           id: "monthly-spending-change",
           tag: "Monthly spending",
           title: `Spending is holding steady vs ${previousMonth.month}`,
-          detail: `Expenses in ${currentMonth.month} match ${previousMonth.month} at ${formatCurrency(currentMonth.expenses)}.`,
+          detail: `Expenses in ${currentMonth.month} match ${previousMonth.month} at ${fmt(currentMonth.expenses)}.`,
           tone: "neutral",
         });
       }
@@ -188,7 +190,7 @@ export default function ReportsPage() {
       list.push({
         id: "monthly-spending-change",
         tag: "Monthly spending",
-        title: `${formatCurrency(currentMonth.expenses)} spent in ${currentMonth.month}`,
+        title: `${fmt(currentMonth.expenses)} spent in ${currentMonth.month}`,
         detail: "Once two consecutive months of expenses are recorded, month-over-month spending changes will appear here.",
         tone: "neutral",
       });
@@ -258,18 +260,18 @@ export default function ReportsPage() {
       list.push({
         id: "overspending-warning",
         tag: "Overspending warning",
-        title: `${topOver.name} exceeded its monthly budget by ${formatCurrency(topOver.over)}`,
+        title: `${topOver.name} exceeded its monthly budget by ${fmt(topOver.over)}`,
         detail:
           overspentCategories.length > 1
-            ? `${overspentCategories.length} categories are currently above their monthly limit, led by ${topOver.name} (${formatCurrency(topOver.spent)} of ${formatCurrency(topOver.limit)}).`
-            : `You have spent ${formatCurrency(topOver.spent)} against a ${formatCurrency(topOver.limit)} monthly budget in ${topOver.name}.`,
+            ? `${overspentCategories.length} categories are currently above their monthly limit, led by ${topOver.name} (${fmt(topOver.spent)} of ${fmt(topOver.limit)}).`
+            : `You have spent ${fmt(topOver.spent)} against a ${fmt(topOver.limit)} monthly budget in ${topOver.name}.`,
         tone: "warning",
       });
     } else if (expenses > income && income > 0) {
       list.push({
         id: "overspending-warning",
         tag: "Overspending warning",
-        title: `Expenses exceed income by ${formatCurrency(expenses - income)}`,
+        title: `Expenses exceed income by ${fmt(expenses - income)}`,
         detail: "Recorded outflows are higher than total inflows. Review discretionary categories to restore a positive surplus.",
         tone: "warning",
       });
@@ -305,13 +307,13 @@ export default function ReportsPage() {
         id: "goal-progress",
         tag: "Goal progress",
         title: `${closest.name} is ${closestPct}% funded`,
-        detail: `Across ${combinedGoals.length} active ${combinedGoals.length === 1 ? "goal" : "goals"}, you have accumulated ${formatCurrency(totalCurrent)} toward ${formatCurrency(totalTarget)} (${overallPct}% overall).`,
+        detail: `Across ${combinedGoals.length} active ${combinedGoals.length === 1 ? "goal" : "goals"}, you have accumulated ${fmt(totalCurrent)} toward ${fmt(totalTarget)} (${overallPct}% overall).`,
         tone: closestPct >= 75 ? "positive" : "neutral",
       });
     }
 
     return list;
-  }, [data, expenses, financialGoals, income, now, savingsRate, sixMonthTrend, transactions]);
+  }, [data, expenses, financialGoals, hideReports, income, now, savingsRate, sixMonthTrend, transactions]);
 
   function exportCsv() {
     const lines = [
@@ -418,11 +420,11 @@ export default function ReportsPage() {
               <div className="mt-8 grid grid-cols-2 gap-4">
                 <div className="border-l-2 border-ink pl-4 dark:border-[#f7eddd]">
                   <p className="text-xs text-ink-soft dark:text-[#cfc2af]">Income</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums">{formatCurrency(income)}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums">{formatCurrency(income, "reports")}</p>
                 </div>
                 <div className="border-l-2 border-ember-deep pl-4">
                   <p className="text-xs text-ink-soft dark:text-[#cfc2af]">Expenses</p>
-                  <p className="mt-2 text-2xl font-bold tabular-nums">{formatCurrency(expenses)}</p>
+                  <p className="mt-2 text-2xl font-bold tabular-nums">{formatCurrency(expenses, "reports")}</p>
                 </div>
               </div>
             </section>
@@ -431,7 +433,7 @@ export default function ReportsPage() {
               <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
                 Available position
               </p>
-              <p className="mt-5 text-4xl font-bold tabular-nums">{formatCurrency(savings)}</p>
+              <p className="mt-5 text-4xl font-bold tabular-nums">{formatCurrency(savings, "reports")}</p>
               <p className="mt-2 text-sm text-ink-soft dark:text-[#cfc2af]">
                 Savings rate · {savingsRate}%
               </p>
@@ -480,7 +482,7 @@ export default function ReportsPage() {
                     <li key={name}>
                       <div className="flex justify-between text-sm">
                         <b>{name}</b>
-                        <span className="tabular-nums">{formatCurrency(amount)}</span>
+                        <span className="tabular-nums">{formatCurrency(amount, "reports")}</span>
                       </div>
                       <div className="mt-2 h-1.5 bg-ink/10 dark:bg-white/10">
                         <div
@@ -516,7 +518,7 @@ export default function ReportsPage() {
                           </p>
                         </div>
                         <span className="shrink-0 font-bold tabular-nums">
-                          {formatCurrency(Number(row.amount))}
+                          {formatCurrency(Number(row.amount), "reports")}
                         </span>
                       </li>
                     ))}

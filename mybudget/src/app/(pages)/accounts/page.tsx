@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account } from "@/lib/database-types";
+import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
 
 const accountTypes = [
   "cash",
@@ -20,6 +21,8 @@ const accountTypes = [
 ] as const;
 
 export default function AccountsPage() {
+  useHideAmounts();
+  usePrivacyConfig();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -234,7 +237,7 @@ export default function AccountsPage() {
                 </div>
               </div>
               <p className="mt-8 text-3xl font-bold">
-                {formatCurrency(Number(account.balance))}
+                {formatCurrency(Number(account.balance), "accounts")}
               </p>
               <p className="mt-2 border-t border-ink/10 pt-3 text-xs text-ink-soft">
                 Added{" "}

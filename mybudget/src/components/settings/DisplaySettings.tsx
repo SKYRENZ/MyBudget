@@ -1,6 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { api } from "@/lib/api";
+import {
+  getAutoHideOnStartupSnapshot,
+  getDefaultAmountVisibilitySnapshot,
+  getServerAutoHideOnStartupSnapshot,
+  getServerDefaultAmountVisibilitySnapshot,
+  PRIVACY_SECTION_OPTIONS,
+  subscribeAutoHideOnStartup,
+  subscribeDefaultAmountVisibility,
+  updateAutoHideOnStartup,
+  updateDefaultAmountVisibility,
+  updateHideAmounts,
+  updatePrivacyConfig,
+  usePrivacyConfig,
+  type DefaultAmountVisibility,
+  type PrivacyConfig,
+} from "@/lib/privacy-preferences";
 
 const THEME_EVENT = "mybudget-theme-change";
 const THEME_KEY = "mybudget-theme";
@@ -18,6 +35,23 @@ function getCurrentTheme(): ThemeChoice {
 export function DisplaySettings() {
   const [theme, setTheme] = useState<ThemeChoice>(() => getCurrentTheme());
 
+  const defaultVisibility = useSyncExternalStore(
+    subscribeDefaultAmountVisibility,
+    getDefaultAmountVisibilitySnapshot,
+    getServerDefaultAmountVisibilitySnapshot,
+  );
+  const autoHideOnStartup = useSyncExternalStore(
+    subscribeAutoHideOnStartup,
+    getAutoHideOnStartupSnapshot,
+    getServerAutoHideOnStartupSnapshot,
+  );
+  const privacyConfig = usePrivacyConfig();
+
+  function handleSectionToggle(key: keyof PrivacyConfig, checked: boolean) {
+    updatePrivacyConfig({ [key]: checked });
+    void api.profile.update({ [key]: checked }).catch(() => {});
+  }
+
   function applyTheme(choice: ThemeChoice) {
     setTheme(choice);
     if (choice === "system") {
@@ -28,6 +62,18 @@ export function DisplaySettings() {
     // Dispatch the shared theme event — AppShell's useSyncExternalStore picks it up
     // and applies classList / colorScheme via its own useEffect.
     window.dispatchEvent(new Event(THEME_EVENT));
+  }
+
+  function handleDefaultVisibilityChange(mode: DefaultAmountVisibility) {
+    updateDefaultAmountVisibility(mode);
+    updateHideAmounts(mode === "hide");
+    void api.preferences.update({ defaultAmountVisibility: mode }).catch(() => {});
+    void api.profile.update({ hide_amounts: mode === "hide" }).catch(() => {});
+  }
+
+  function handleAutoHideChange(enabled: boolean) {
+    updateAutoHideOnStartup(enabled);
+    void api.preferences.update({ autoHideOnStartup: enabled }).catch(() => {});
   }
 
   return (
@@ -65,8 +111,88 @@ export function DisplaySettings() {
         </fieldset>
       </section>
 
+      {/* Privacy */}
+      <section className="border-t border-ink/15 pt-5 dark:border-white/10">
+        <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">
+          Privacy
+        </p>
+        <h3 className="mt-0.5 font-display text-lg font-bold">Default Amount Visibility</h3>
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft dark:text-[#cfc2af]">
+          Hide all monetary values across MyBudget while keeping transactions, categories, and
+          navigation visible.
+        </p>
+
+        <fieldset className="mt-3">
+          <legend className="sr-only">Default Amount Visibility</legend>
+          <div className="grid grid-cols-2 border border-ink/15 dark:border-white/10">
+            {(
+              [
+                { value: "show", label: "Show Amounts" },
+                { value: "hide", label: "Hide Amounts" },
+              ] as const
+            ).map((opt, i) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleDefaultVisibilityChange(opt.value)}
+                className={`py-3 text-xs font-bold transition-colors sm:text-sm ${
+                  i > 0 ? "border-l border-ink/15 dark:border-white/10" : ""
+                } ${
+                  defaultVisibility === opt.value
+                    ? "bg-ink text-paper dark:bg-[#f7eddd] dark:text-[#17120f]"
+                    : "text-ink-soft hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 border border-ink/15 px-3.5 py-3 dark:border-white/10">
+          <div>
+            <p className="text-sm font-semibold dark:text-[#f7eddd]">Auto Hide On Startup</p>
+            <p className="mt-0.5 text-xs text-ink-soft dark:text-[#cfc2af]">
+              Automatically mask amounts each time you open MyBudget
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={autoHideOnStartup}
+            onChange={(e) => handleAutoHideChange(e.target.checked)}
+            className="size-4 accent-[#b85f24]"
+          />
+        </label>
+
+        {/* Privacy Mode Configuration */}
+        <div className="mt-5">
+          <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft dark:text-[#cfc2af]">
+            Privacy Mode Configuration
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-soft dark:text-[#cfc2af]">
+            Choose which financial information should be hidden when Privacy Mode is enabled.
+          </p>
+          <div className="mt-3 divide-y divide-ink/10 border border-ink/15 dark:divide-white/8 dark:border-white/10">
+            {PRIVACY_SECTION_OPTIONS.map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5 hover:bg-cream/40 dark:hover:bg-white/[0.03]"
+              >
+                <span className="text-sm font-medium dark:text-[#f7eddd]">{label}</span>
+                <input
+                  type="checkbox"
+                  checked={privacyConfig[key]}
+                  onChange={(e) => handleSectionToggle(key, e.target.checked)}
+                  className="size-4 accent-[#b85f24]"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Compact Mode (placeholder) */}
-      <section>
+      <section className="border-t border-ink/15 pt-5 dark:border-white/10">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft dark:text-[#cfc2af]">
           Layout
         </p>

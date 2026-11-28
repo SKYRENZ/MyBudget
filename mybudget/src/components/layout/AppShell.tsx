@@ -16,6 +16,15 @@ import {
 } from "@/lib/app-preferences";
 import { getCurrencySnapshot, getServerCurrencySnapshot, subscribeCurrencySettings } from "@/lib/currency";
 import {
+  getAutoHideOnStartup,
+  toggleHideAmounts,
+  updateAutoHideOnStartup,
+  updateDefaultAmountVisibility,
+  updateHideAmounts,
+  updatePrivacyConfig,
+  useHideAmounts,
+} from "@/lib/privacy-preferences";
+import {
   getServerTransactionDisplaySnapshot,
   getTransactionDisplaySnapshot,
   subscribeTransactionDisplayMode,
@@ -31,6 +40,7 @@ const nav = [
 ] as const;
 
 const THEME_EVENT = "mybudget-theme-change";
+let hasHydratedPrivacy = false;
 
 function subscribeToTheme(callback: () => void) {
   window.addEventListener(THEME_EVENT, callback);
@@ -57,6 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const dark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const hideAmounts = useHideAmounts();
   useSyncExternalStore(subscribeCurrencySettings, getCurrencySnapshot, getServerCurrencySnapshot);
   useSyncExternalStore(
     subscribeTransactionDisplayMode,
@@ -95,6 +106,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event(THEME_EVENT));
   }
 
+  function handleToggleVisibility() {
+    hasHydratedPrivacy = true;
+    const next = toggleHideAmounts();
+    void api.profile.update({ hide_amounts: next }).catch(() => {});
+  }
+
   function handleExportCsv() {
     // Trigger CSV export via the reports page download mechanism
     const link = document.createElement("a");
@@ -126,6 +143,55 @@ export function AppShell({ children }: { children: ReactNode }) {
               if (preferences.defaultSort) updateDefaultSort(preferences.defaultSort);
               if (preferences.defaultCategorySort)
                 updateDefaultCategorySort(preferences.defaultCategorySort);
+              if (preferences.defaultAmountVisibility)
+                updateDefaultAmountVisibility(preferences.defaultAmountVisibility);
+              if (typeof preferences.autoHideOnStartup === "boolean")
+                updateAutoHideOnStartup(preferences.autoHideOnStartup);
+
+              const autoHide =
+                typeof preferences.autoHideOnStartup === "boolean"
+                  ? preferences.autoHideOnStartup
+                  : getAutoHideOnStartup();
+
+              if (!hasHydratedPrivacy) {
+                hasHydratedPrivacy = true;
+                api.profile
+                  .get()
+                  .then((profile) => {
+                    if (cancelled) return;
+                    updatePrivacyConfig({
+                      ...(typeof profile.hide_dashboard === "boolean"
+                        ? { hide_dashboard: profile.hide_dashboard }
+                        : {}),
+                      ...(typeof profile.hide_category_budgets === "boolean"
+                        ? { hide_category_budgets: profile.hide_category_budgets }
+                        : {}),
+                      ...(typeof profile.hide_transactions === "boolean"
+                        ? { hide_transactions: profile.hide_transactions }
+                        : {}),
+                      ...(typeof profile.hide_accounts === "boolean"
+                        ? { hide_accounts: profile.hide_accounts }
+                        : {}),
+                      ...(typeof profile.hide_goals_savings === "boolean"
+                        ? { hide_goals_savings: profile.hide_goals_savings }
+                        : {}),
+                      ...(typeof profile.hide_reports === "boolean"
+                        ? { hide_reports: profile.hide_reports }
+                        : {}),
+                    });
+
+                    if (autoHide) {
+                      updateHideAmounts(true);
+                    } else if (typeof profile.hide_amounts === "boolean") {
+                      updateHideAmounts(profile.hide_amounts);
+                    } else if (preferences.defaultAmountVisibility) {
+                      updateHideAmounts(preferences.defaultAmountVisibility === "hide");
+                    }
+                  })
+                  .catch(() => {
+                    if (autoHide) updateHideAmounts(true);
+                  });
+              }
             })
             .catch(() => {});
         }
@@ -190,6 +256,52 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="grid size-9 place-items-center border border-ink/15 text-sm hover:border-ink/40"
             >
               {dark ? "☀" : "☾"}
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleVisibility}
+              aria-label={hideAmounts ? "Show amounts" : "Hide amounts"}
+              title={hideAmounts ? "Show amounts" : "Hide amounts"}
+              aria-pressed={hideAmounts}
+              className={`grid size-9 place-items-center border transition-colors ${
+                hideAmounts
+                  ? "border-ember-deep bg-ember-deep/10 text-ember-deep"
+                  : "border-ink/15 hover:border-ink/40"
+              }`}
+            >
+              {hideAmounts ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4"
+                  aria-hidden="true"
+                >
+                  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+                  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+                  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+                  <path d="m2 2 20 20" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4"
+                  aria-hidden="true"
+                >
+                  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
             </button>
             <button
               type="button"

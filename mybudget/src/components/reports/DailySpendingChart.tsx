@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { formatAxisCurrency } from "@/components/reports/chart-utils";
 import { formatCurrency } from "@/lib/currency";
+import { useSectionHidden } from "@/lib/privacy-preferences";
 
 export type WeekdaySpendingPoint = {
   day: string;
@@ -38,13 +39,14 @@ function WeekdayTooltip({
         {point.day}
       </p>
       <p className="mt-1 font-semibold tabular-nums text-ink dark:text-[#f7eddd]">
-        {formatCurrency(point.amount)}
+        {formatCurrency(point.amount, "reports")}
       </p>
     </div>
   );
 }
 
 export function DailySpendingChart({ data }: { data: WeekdaySpendingPoint[] }) {
+  const hideAmounts = useSectionHidden("reports");
   const hasSpending = data.some((point) => point.amount > 0);
 
   if (!hasSpending) {
@@ -70,7 +72,7 @@ export function DailySpendingChart({ data }: { data: WeekdaySpendingPoint[] }) {
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 10, fill: "#6b4a2c" }}
-            tickFormatter={formatAxisCurrency}
+            tickFormatter={(value) => (hideAmounts ? "••••" : formatAxisCurrency(value))}
             width={52}
           />
           <Tooltip

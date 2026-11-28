@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { formatAxisCurrency } from "@/components/reports/chart-utils";
 import { formatCurrency } from "@/lib/currency";
+import { useSectionHidden } from "@/lib/privacy-preferences";
 
 export type MonthlyCashFlowPoint = {
   monthKey: string;
@@ -51,7 +52,7 @@ function TrendTooltip({
               {entry.name}
             </span>
             <span className="font-semibold tabular-nums text-ink dark:text-[#f7eddd]">
-              {formatCurrency(Number(entry.value ?? 0))}
+              {formatCurrency(Number(entry.value ?? 0), "reports")}
             </span>
           </div>
         ))}
@@ -61,6 +62,7 @@ function TrendTooltip({
 }
 
 export function CashFlowTrendChart({ data }: { data: MonthlyCashFlowPoint[] }) {
+  const hideAmounts = useSectionHidden("reports");
   const hasData = data.some(
     (point) => point.income > 0 || point.expenses > 0 || point.savings > 0,
   );
@@ -104,7 +106,7 @@ export function CashFlowTrendChart({ data }: { data: MonthlyCashFlowPoint[] }) {
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 11, fill: "#6b4a2c" }}
-              tickFormatter={formatAxisCurrency}
+              tickFormatter={(value) => (hideAmounts ? "••••" : formatAxisCurrency(value))}
               width={54}
             />
             <Tooltip content={<TrendTooltip />} />

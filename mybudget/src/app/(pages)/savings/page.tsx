@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account, FinancialGoal, SavingsGoal } from "@/lib/database-types";
+import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
 
 type PlanningDialog = "contribution" | "savings" | "goal" | null;
 type DeleteTarget =
@@ -16,6 +17,8 @@ type DeleteTarget =
   | null;
 
 export default function SavingsPage() {
+  useHideAmounts();
+  usePrivacyConfig();
   const [savings, setSavings] = useState<SavingsGoal[]>([]);
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -309,10 +312,10 @@ export default function SavingsPage() {
                       </div>
                     </div>
                     <h3 className="mt-3 font-display text-2xl font-bold">{goal.name}</h3>
-                    <p className="mt-5 text-3xl font-bold">{formatCurrency(saved)}</p>
-                    <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
+                    <p className="mt-5 text-3xl font-bold">{formatCurrency(saved, "goals_savings")}</p>
+                    <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target, "goals_savings")} · {percent}%</p>
                     <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
-                    <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Monthly</p><b>{formatCurrency(Number(goal.monthly_contribution))}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - saved, 0))}</b></div></div>
+                    <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Monthly</p><b>{formatCurrency(Number(goal.monthly_contribution), "goals_savings")}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - saved, 0), "goals_savings")}</b></div></div>
                   </article>
                 );
               })}
@@ -360,10 +363,10 @@ export default function SavingsPage() {
                     </div>
                   </div>
                   <p className="mt-2 text-sm text-ink-soft">{goal.description || "No description"}</p>
-                  <p className="mt-5 text-3xl font-bold">{formatCurrency(current)}</p>
-                  <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
+                  <p className="mt-5 text-3xl font-bold">{formatCurrency(current, "goals_savings")}</p>
+                  <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target, "goals_savings")} · {percent}%</p>
                   <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
-                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Deadline</p><b>{goal.deadline || "Not set"}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - current, 0))}</b></div></div>
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Deadline</p><b>{goal.deadline || "Not set"}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - current, 0), "goals_savings")}</b></div></div>
                 </article>
                 );
               })}
@@ -392,7 +395,7 @@ export default function SavingsPage() {
                     <option value="">Select source account</option>
                     {accounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {account.name} ({formatCurrency(Number(account.balance))})
+                        {account.name} ({formatCurrency(Number(account.balance), "accounts")})
                       </option>
                     ))}
                   </select>

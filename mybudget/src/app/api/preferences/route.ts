@@ -21,6 +21,8 @@ export type UserPreferencesPayload = {
   pageSize?: 25 | 50 | 100;
   defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
   defaultCategorySort?: CategorySortPreference;
+  defaultAmountVisibility?: "show" | "hide";
+  autoHideOnStartup?: boolean;
 };
 
 const VALID_CATEGORY_SORTS: CategorySortPreference[] = [
@@ -60,6 +62,12 @@ function sanitizePreferences(raw: unknown): UserPreferencesPayload {
     VALID_CATEGORY_SORTS.includes(obj.defaultCategorySort as CategorySortPreference)
   ) {
     clean.defaultCategorySort = obj.defaultCategorySort as CategorySortPreference;
+  }
+  if (obj.defaultAmountVisibility === "show" || obj.defaultAmountVisibility === "hide") {
+    clean.defaultAmountVisibility = obj.defaultAmountVisibility;
+  }
+  if (typeof obj.autoHideOnStartup === "boolean") {
+    clean.autoHideOnStartup = obj.autoHideOnStartup;
   }
 
   return clean;
