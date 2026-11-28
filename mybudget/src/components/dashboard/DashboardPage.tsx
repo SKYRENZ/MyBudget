@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import {
+  MonthlyCashFlowChart,
+  type DailyCashFlowPoint,
+} from "@/components/dashboard/MonthlyCashFlowChart";
+import { toLocalDateKey } from "@/components/reports/chart-utils";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -14,6 +20,7 @@ type DashboardData = {
     amount: number;
     description: string | null;
     transaction_date: string;
+    categories?: { name: string } | null;
   }>;
   accounts: Array<{ id: string; name: string; type: string; balance: number }>;
   categories: Array<{ id: string; name: string; monthly_budget: number }>;
@@ -30,39 +37,130 @@ type DashboardData = {
 export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    const now = new Date();
-    api.dashboard(now.getMonth() + 1, now.getFullYear())
-      .then(setData)
+    const current = new Date();
+    api.dashboard(current.getMonth() + 1, current.getFullYear())
+      .then((dashboardData) => {
+        setNow(current);
+        setData(dashboardData);
+      })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Could not load dashboard"));
   }, []);
 
-  const transactions = data?.transactions ?? [];
-  const income = transactions.filter((item) => item.type === "income").reduce((sum, item) => sum + Number(item.amount), 0);
-  const expenses = transactions.filter((item) => item.type === "expense").reduce((sum, item) => sum + Number(item.amount), 0);
+  const transactions = useMemo(() => data?.transactions ?? [], [data]);
+  const income = transactions
+    .filter((item) => item.type === "income")
+    .reduce((sum, item) => sum + Number(item.amount), 0);
+  const expenses = transactions
+    .filter((item) => item.type === "expense")
+    .reduce((sum, item) => sum + Number(item.amount), 0);
   const saved = data?.savingsGoals.reduce((sum, goal) => sum + Number(goal.current_amount), 0) ?? 0;
+
+  const todayStats = useMemo(() => {
+    if (!now) {
+      return {
+        totalSpentToday: 0,
+        transactionCountToday: 0,
+        largestExpense: null,
+      };
+    }
+    const todayKey = toLocalDateKey(now);
+    const todayTransactions = transactions.filter((item) => item.transaction_date === todayKey);
+    const todayExpenses = todayTransactions.filter((item) => item.type === "expense");
+    const totalSpentToday = todayExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
+    const largestExpense = todayExpenses.reduce<DashboardData["transactions"][number] | null>(
+      (largest, item) =>
+        !largest || Number(item.amount) > Number(largest.amount) ? item : largest,
+      null,
+    );
+
+    return {
+      totalSpentToday,
+      transactionCountToday: todayTransactions.length,
+      largestExpense,
+    };
+  }, [now, transactions]);
+
+  const monthlyCashFlow = useMemo<DailyCashFlowPoint[]>(() => {
+    if (!now) return [];
+    const year = now.getFullYear();
+    const monthIndex = now.getMonth();
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    const monthLabel = now.toLocaleDateString("en-US", { month: "short" });
+
+    const byDay = new Map<string, { income: number; expenses: number }>();
+    for (const item of transactions) {
+      const current = byDay.get(item.transaction_date) ?? { income: 0, expenses: 0 };
+      if (item.type === "income") current.income += Number(item.amount);
+      if (item.type === "expense") current.expenses += Number(item.amount);
+      byDay.set(item.transaction_date, current);
+    }
+
+    const points: DailyCashFlowPoint[] = [];
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const key = `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const totals = byDay.get(key);
+      points.push({
+        day: String(day),
+        label: `${monthLabel} ${day}`,
+        income: totals?.income ?? 0,
+        expenses: totals?.expenses ?? 0,
+      });
+    }
+    return points;
+  }, [now, transactions]);
 
   return (
     <Container>
-      <PageHeader eyebrow="Monthly overview" title="Overview" description="Your live financial position, across every account and category." />
-      {error ? <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">{error}</p> : null}
+      <PageHeader
+        eyebrow="Monthly overview"
+        title="Overview"
+        description="Your live financial position, across every account and category."
+      />
+      {error ? (
+        <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">
+          {error}
+        </p>
+      ) : null}
+
       {!data && !error ? (
         <>
           <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
-              <section key={index} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+              <section
+                key={index}
+                className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]"
+              >
                 <Skeleton className="h-2.5 w-20" />
                 <Skeleton className="mt-5 h-7 w-28" />
               </section>
             ))}
           </div>
+
+          <section className="mt-4 border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+            <Skeleton className="h-2.5 w-24" />
+            <Skeleton className="mt-2 h-5 w-36" />
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="border-t border-ink/10 pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-4 first:border-0 first:pt-0 first:pl-0 dark:border-white/10">
+                  <Skeleton className="h-2.5 w-28" />
+                  <Skeleton className="mt-3 h-6 w-24" />
+                </div>
+              ))}
+            </div>
+          </section>
+
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
             <section className="border border-ink/15 bg-paper p-5 lg:col-span-2 dark:border-white/10 dark:bg-[#211b17]">
               <Skeleton className="h-5 w-40" />
               <div className="mt-5 space-y-4">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="flex items-center justify-between gap-4 border-b border-ink/8 pb-3 last:border-b-0 dark:border-white/8">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-4 border-b border-ink/8 pb-3 last:border-b-0 dark:border-white/8"
+                  >
                     <div className="space-y-2">
                       <Skeleton className="h-4 w-36" />
                       <Skeleton className="h-3 w-24" />
@@ -87,6 +185,12 @@ export function DashboardPage() {
               </div>
             </section>
           </div>
+
+          <section className="mt-5 border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+            <Skeleton className="h-2.5 w-24" />
+            <Skeleton className="mt-2 h-5 w-40" />
+            <Skeleton className="mt-5 h-52 w-full" />
+          </section>
         </>
       ) : null}
 
@@ -99,27 +203,123 @@ export function DashboardPage() {
               ["Total saved", saved],
               ["Left to spend", income - expenses - saved],
             ].map(([label, value]) => (
-              <section key={String(label)} className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
-                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft">{label}</p>
-                <p className="mt-4 font-display text-2xl font-bold">{formatCurrency(Number(value))}</p>
+              <section
+                key={String(label)}
+                className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]"
+              >
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
+                  {label}
+                </p>
+                <p className="mt-4 font-display text-2xl font-bold tabular-nums">
+                  {formatCurrency(Number(value))}
+                </p>
               </section>
             ))}
           </div>
 
+          <section className="mt-4 border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ember-deep">
+                  Daily pulse
+                </p>
+                <h2 className="mt-1 font-display text-xl font-bold">Today&apos;s Activity</h2>
+              </div>
+              <p className="text-xs text-ink-soft dark:text-[#cfc2af]">
+                {now
+                  ? now.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : ""}
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-4 border-t border-ink/10 pt-4 sm:grid-cols-3 dark:border-white/10">
+              <div>
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
+                  Total spent today
+                </p>
+                <p className="mt-2 font-display text-2xl font-bold tabular-nums">
+                  {formatCurrency(todayStats.totalSpentToday)}
+                </p>
+              </div>
+
+              <div className="border-t border-ink/10 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5 dark:border-white/10">
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
+                  Number of transactions today
+                </p>
+                <p className="mt-2 font-display text-2xl font-bold tabular-nums">
+                  {todayStats.transactionCountToday}
+                </p>
+              </div>
+
+              <div className="border-t border-ink/10 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5 dark:border-white/10">
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
+                  Largest expense today
+                </p>
+                {todayStats.largestExpense ? (
+                  <>
+                    <p className="mt-2 font-display text-2xl font-bold tabular-nums">
+                      {formatCurrency(Number(todayStats.largestExpense.amount))}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-ink-soft dark:text-[#cfc2af]">
+                      {todayStats.largestExpense.description ||
+                        todayStats.largestExpense.categories?.name ||
+                        "Expense"}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 font-display text-2xl font-bold text-ink-soft/70 dark:text-[#cfc2af]/70">
+                    —
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
             <section className="border border-ink/15 bg-paper p-5 lg:col-span-2 dark:border-white/10 dark:bg-[#211b17]">
-              <h2 className="font-display text-xl font-bold">Recent transactions</h2>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-display text-xl font-bold">Recent transactions</h2>
+                <Link
+                  href="/expenses"
+                  className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ember-deep transition-colors hover:underline"
+                >
+                  View All Transactions →
+                </Link>
+              </div>
               {transactions.length === 0 ? (
-                <p className="mt-6 text-sm text-ink-soft">No transactions recorded this month.</p>
+                <p className="mt-6 text-sm text-ink-soft dark:text-[#cfc2af]">
+                  No transactions recorded this month.
+                </p>
               ) : (
-                <ul className="mt-4 divide-y divide-ink/10">
-                  {transactions.slice(0, 8).map((item) => (
-                    <li key={item.id} className="flex items-center justify-between gap-4 py-3">
-                      <div>
-                        <p className="font-semibold">{item.description || item.type}</p>
-                        <p className="mt-1 text-xs text-ink-soft">{item.transaction_date}</p>
+                <ul className="mt-4 divide-y divide-ink/10 dark:divide-white/10">
+                  {transactions.slice(0, 10).map((item, index) => (
+                    <li
+                      key={item.id}
+                      className={`items-center justify-between gap-4 py-3 ${
+                        index >= 5 ? "hidden lg:flex" : "flex"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">
+                          {item.description || item.type}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-ink-soft dark:text-[#cfc2af]">
+                          {item.categories?.name || "Uncategorized"} · {item.transaction_date}
+                        </p>
                       </div>
-                      <p className="font-bold">
+                      <p
+                        className={`shrink-0 font-bold tabular-nums ${
+                          item.type === "income"
+                            ? "text-green-700 dark:text-green-400"
+                            : item.type === "expense"
+                              ? "text-ember-deep"
+                              : ""
+                        }`}
+                      >
                         {item.type === "income" ? "+" : item.type === "expense" ? "−" : ""}
                         {formatCurrency(Number(item.amount))}
                       </p>
@@ -128,22 +328,33 @@ export function DashboardPage() {
                 </ul>
               )}
             </section>
+
             <section className="border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
               <h2 className="font-display text-xl font-bold">Savings progress</h2>
               {data.savingsGoals.length === 0 ? (
-                <p className="mt-6 text-sm text-ink-soft">No savings goals yet.</p>
+                <p className="mt-6 text-sm text-ink-soft dark:text-[#cfc2af]">
+                  No savings goals yet.
+                </p>
               ) : (
                 <ul className="mt-5 space-y-5">
                   {data.savingsGoals.map((goal) => {
-                    const percent = Number(((Number(goal.current_amount) / Math.max(Number(goal.target_amount), 1)) * 100).toFixed(2));
+                    const percent = Number(
+                      (
+                        (Number(goal.current_amount) / Math.max(Number(goal.target_amount), 1)) *
+                        100
+                      ).toFixed(2),
+                    );
                     return (
                       <li key={goal.id}>
                         <div className="flex justify-between text-sm">
                           <b>{goal.name}</b>
-                          <span>{percent}%</span>
+                          <span className="tabular-nums">{percent}%</span>
                         </div>
-                        <div className="mt-2 h-1.5 bg-ink/10">
-                          <div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} />
+                        <div className="mt-2 h-1.5 bg-ink/10 dark:bg-white/10">
+                          <div
+                            className="h-full bg-ember-deep"
+                            style={{ width: `${Math.min(percent, 100)}%` }}
+                          />
                         </div>
                       </li>
                     );
@@ -152,6 +363,23 @@ export function DashboardPage() {
               )}
             </section>
           </div>
+
+          <section className="mt-5 border border-ink/15 bg-paper p-5 dark:border-white/10 dark:bg-[#211b17]">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <p className="text-[0.58rem] font-bold uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
+                  Daily movement
+                </p>
+                <h2 className="mt-1 font-display text-xl font-bold">Monthly Cash Flow</h2>
+              </div>
+              <p className="text-xs text-ink-soft dark:text-[#cfc2af]">
+                {now
+                  ? now.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+                  : ""}
+              </p>
+            </div>
+            <MonthlyCashFlowChart data={monthlyCashFlow} />
+          </section>
         </>
       ) : null}
     </Container>

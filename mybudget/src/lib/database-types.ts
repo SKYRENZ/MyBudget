@@ -15,6 +15,8 @@ export type Category = {
   icon: string | null;
   color: string | null;
   monthly_budget: number | string;
+  sort_order?: number;
+  is_pinned?: boolean;
   created_at: string;
 };
 

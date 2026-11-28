@@ -61,6 +61,40 @@ export const api = {
     update: (body: { full_name?: string; is_new_user?: number }) =>
       authorizedFetch("/api/profile", { method: "PUT", body: JSON.stringify(body) }),
   },
+  preferences: {
+    get: () =>
+      authorizedFetch("/api/preferences") as Promise<{
+        preferences: {
+          expenseLayout?: "transactions_first" | "categories_first";
+          transactionDisplay?: "pagination" | "infinite";
+          pageSize?: 25 | 50 | 100;
+          defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
+          defaultCategorySort?:
+            | "manual"
+            | "spent_desc"
+            | "spent_asc"
+            | "remaining_desc"
+            | "remaining_asc"
+            | "name_asc"
+            | "name_desc";
+        };
+      }>,
+    update: (body: {
+      expenseLayout?: "transactions_first" | "categories_first";
+      transactionDisplay?: "pagination" | "infinite";
+      pageSize?: 25 | 50 | 100;
+      defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
+      defaultCategorySort?:
+        | "manual"
+        | "spent_desc"
+        | "spent_asc"
+        | "remaining_desc"
+        | "remaining_asc"
+        | "name_asc"
+        | "name_desc";
+    }) =>
+      authorizedFetch("/api/preferences", { method: "PUT", body: JSON.stringify(body) }),
+  },
   dashboard: (month?: number, year?: number) => {
     const params = new URLSearchParams();
     if (month) params.set("month", String(month));
@@ -78,9 +112,43 @@ export const api = {
     list: () => authorizedFetch("/api/categories"),
     create: (body: unknown) => authorizedFetch("/api/categories", { method: "POST", body: JSON.stringify(body) }),
     update: (id: string, body: unknown) => authorizedFetch(`/api/categories/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    reorder: (items: Array<{ id: string; sort_order: number; is_pinned: boolean }>) =>
+      authorizedFetch("/api/categories/reorder", {
+        method: "PUT",
+        body: JSON.stringify({ items }),
+      }) as Promise<{ updated: number }>,
   },
   transactions: {
     list: () => authorizedFetch("/api/transactions"),
+    query: (params: {
+      page?: number;
+      pageSize?: number;
+      search?: string;
+      startDate?: string;
+      endDate?: string;
+      categoryId?: string;
+      accountId?: string;
+      type?: string;
+      sort?: string;
+    }) => {
+      const searchParams = new URLSearchParams({ paginated: "1" });
+      if (params.page) searchParams.set("page", String(params.page));
+      if (params.pageSize) searchParams.set("pageSize", String(params.pageSize));
+      if (params.search) searchParams.set("search", params.search);
+      if (params.startDate) searchParams.set("startDate", params.startDate);
+      if (params.endDate) searchParams.set("endDate", params.endDate);
+      if (params.categoryId) searchParams.set("categoryId", params.categoryId);
+      if (params.accountId) searchParams.set("accountId", params.accountId);
+      if (params.type) searchParams.set("type", params.type);
+      if (params.sort) searchParams.set("sort", params.sort);
+      return authorizedFetch(`/api/transactions?${searchParams}`) as Promise<{
+        items: import("@/lib/database-types").Transaction[];
+        total: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+      }>;
+    },
     create: (body: unknown) => authorizedFetch("/api/transactions", { method: "POST", body: JSON.stringify(body) }),
   },
   savingsGoals: {

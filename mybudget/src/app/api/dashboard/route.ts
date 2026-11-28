@@ -20,15 +20,34 @@ export async function GET(request: Request) {
     transactionQuery = transactionQuery.gte("transaction_date", start).lt("transaction_date", end);
   }
 
-  const [transactions, accounts, categories, savingsGoals, budgets] = await Promise.all([
+  const categoriesPromise = auth.supabase
+    .from("categories")
+    .select("*")
+    .eq("user_id", auth.user.id)
+    .order("is_pinned", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  const [transactions, accounts, initialCategories, savingsGoals, budgets] = await Promise.all([
     transactionQuery.order("transaction_date", { ascending: false }),
     auth.supabase.from("accounts").select("*").eq("user_id", auth.user.id).order("name"),
-    auth.supabase.from("categories").select("*").eq("user_id", auth.user.id).order("name"),
+    categoriesPromise,
     auth.supabase.from("savings_goals").select("*").eq("user_id", auth.user.id).order("created_at", { ascending: false }),
     month && year
       ? auth.supabase.from("budgets").select("*, categories(name,icon,color)").eq("user_id", auth.user.id).eq("month", Number(month)).eq("year", Number(year))
       : auth.supabase.from("budgets").select("*, categories(name,icon,color)").eq("user_id", auth.user.id),
   ]);
+
+  let categories = initialCategories;
+
+  // Graceful fallback if sort_order / is_pinned columns have not been migrated yet
+  if (categories.error && categories.error.message?.includes("column")) {
+    categories = await auth.supabase
+      .from("categories")
+      .select("*")
+      .eq("user_id", auth.user.id)
+      .order("name", { ascending: true });
+  }
 
   for (const result of [transactions, accounts, categories, savingsGoals, budgets]) {
     if (result.error) return jsonError(result.error, 500);
