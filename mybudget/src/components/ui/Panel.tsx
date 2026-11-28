@@ -28,9 +28,9 @@ export function Panel({
   return (
     <section
       aria-labelledby={headingId}
-      className={`flex flex-col border border-ink/15 bg-paper ${className}`}
+      className={`flex flex-col border border-ink/15 bg-paper dark:border-white/15 dark:bg-[#211b17] ${className}`}
     >
-      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-ink/15 px-5 py-4 sm:px-6 sm:py-5">
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-ink/15 px-5 py-4 sm:px-6 sm:py-5 dark:border-white/10">
         <div className="min-w-0">
           {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
           <h2

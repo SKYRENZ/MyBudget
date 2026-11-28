@@ -49,3 +49,23 @@
     }
   }
 }
+
+.mobile-modal-backdrop {
+  top: var(--vv-offset-top, 0px);
+  height: var(--vvh, 100dvh);
+}
+
+.mobile-modal-panel {
+  max-height: calc(var(--vvh, 100dvh) - 1rem);
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .mobile-modal-panel {
+    max-height: calc(var(--vvh, 100dvh) - 2.5rem);
+  }
+}
+
+html[data-keyboard-open="true"] .mobile-bottom-nav {
+  display: none;
+}

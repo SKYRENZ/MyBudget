@@ -1,3 +1,5 @@
+import { isSectionHidden, MASKED_AMOUNT, type PrivacySection } from "@/lib/privacy-preferences";
+
 export type CurrencyCode = "USD" | "PHP";
 
 export type CurrencySettings = {
@@ -85,11 +87,17 @@ function formatDecimalCurrencyAmount(amount: number) {
   return `${sign}${symbol}${formatDecimalAmount(displayAmount, 2)}`;
 }
 
-export function formatCurrency(amount: number) {
+export function formatCurrency(amount: number, section?: PrivacySection) {
+  if (isSectionHidden(section)) {
+    return `${getCurrencySymbol()}${MASKED_AMOUNT}`;
+  }
   return formatDecimalCurrencyAmount(amount);
 }
 
-export function formatCompactCurrency(amount: number) {
+export function formatCompactCurrency(amount: number, section?: PrivacySection) {
+  if (isSectionHidden(section)) {
+    return `${getCurrencySymbol()}${MASKED_AMOUNT}`;
+  }
   const settings = getCurrencySettings();
   const convertedAmount = toDisplayAmount(amount);
   const sign = convertedAmount < 0 ? "-" : "";

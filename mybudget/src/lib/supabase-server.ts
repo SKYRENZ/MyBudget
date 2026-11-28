@@ -50,6 +50,67 @@ export function createServerSupabase(accessToken: string): SupabaseClient {
   });
 }
 
+type RefreshedSessionCacheEntry = {
+  user: User;
+  refreshedSession: StoredSession;
+  cachedAt: number;
+};
+
+const REFRESH_CACHE_TTL_MS = 15_000;
+const inFlightRefreshes = new Map<string, Promise<RefreshedSessionCacheEntry | null>>();
+const recentRefreshes = new Map<string, RefreshedSessionCacheEntry>();
+
+function pruneRecentRefreshes(now: number) {
+  for (const [token, entry] of recentRefreshes.entries()) {
+    if (now - entry.cachedAt > REFRESH_CACHE_TTL_MS) {
+      recentRefreshes.delete(token);
+    }
+  }
+}
+
+async function refreshSessionDeduped(
+  anonClient: SupabaseClient,
+  refreshToken: string,
+): Promise<RefreshedSessionCacheEntry | null> {
+  const now = Date.now();
+  pruneRecentRefreshes(now);
+
+  const cached = recentRefreshes.get(refreshToken);
+  if (cached) {
+    return cached;
+  }
+
+  let promise = inFlightRefreshes.get(refreshToken);
+  if (!promise) {
+    promise = (async () => {
+      const { data: refreshed, error: refreshError } = await anonClient.auth.refreshSession({
+        refresh_token: refreshToken,
+      });
+
+      if (!refreshError && refreshed.session && refreshed.user) {
+        const entry: RefreshedSessionCacheEntry = {
+          user: refreshed.user,
+          refreshedSession: {
+            access_token: refreshed.session.access_token,
+            refresh_token: refreshed.session.refresh_token,
+            expires_at: refreshed.session.expires_at,
+          },
+          cachedAt: Date.now(),
+        };
+        recentRefreshes.set(refreshToken, entry);
+        return entry;
+      }
+      return null;
+    })().finally(() => {
+      inFlightRefreshes.delete(refreshToken);
+    });
+
+    inFlightRefreshes.set(refreshToken, promise);
+  }
+
+  return promise;
+}
+
 type AuthenticatedRequest =
   | {
       supabase: SupabaseClient;
@@ -82,19 +143,12 @@ export async function getRequestUser(request: Request): Promise<AuthenticatedReq
   }
 
   if (cookieSession?.refresh_token) {
-    const { data: refreshed, error: refreshError } = await anonClient.auth.refreshSession({
-      refresh_token: cookieSession.refresh_token,
-    });
-
-    if (!refreshError && refreshed.session && refreshed.user) {
+    const refreshed = await refreshSessionDeduped(anonClient, cookieSession.refresh_token);
+    if (refreshed) {
       return {
-        supabase: createServerSupabase(refreshed.session.access_token),
+        supabase: createServerSupabase(refreshed.refreshedSession.access_token),
         user: refreshed.user,
-        refreshedSession: {
-          access_token: refreshed.session.access_token,
-          refresh_token: refreshed.session.refresh_token,
-          expires_at: refreshed.session.expires_at,
-        },
+        refreshedSession: refreshed.refreshedSession,
         status: 200 as const,
       };
     }

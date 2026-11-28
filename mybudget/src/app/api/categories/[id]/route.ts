@@ -1,3 +1,4 @@
+import { normalizeHexColor } from "@/lib/category-colors";
 import { getRequestUser, jsonError } from "@/lib/supabase-server";
 
 export async function GET(
@@ -41,6 +42,9 @@ export async function PUT(
   delete payload.id;
   delete payload.user_id;
   delete payload.created_at;
+  if ("color" in payload) {
+    payload.color = normalizeHexColor(typeof payload.color === "string" ? payload.color : null);
+  }
 
   const { data, error } = await auth.supabase
     .from("categories")

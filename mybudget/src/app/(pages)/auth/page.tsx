@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, type FormEvent, useState } from "react";
+import { Suspense, type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { clearLegacyAuthStorage } from "@/lib/api";
+import { Eye, EyeOff } from "lucide-react";
+import { api, clearLegacyAuthStorage } from "@/lib/api";
 import { AccentBars } from "@/components/landing/AccentBars";
 
 function AuthForm() {
@@ -13,9 +14,26 @@ function AuthForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRetypePassword, setShowRetypePassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    api.auth
+      .session()
+      .then((res) => {
+        if (!cancelled && res.authenticated) {
+          router.replace("/dashboard");
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,7 +96,7 @@ function AuthForm() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-cream px-5 py-10">
+    <main className="flex min-h-svh items-center justify-center bg-cream px-5 py-10 pb-[calc(2.5rem+var(--keyboard-inset,0px))]">
       <section className="w-full max-w-md border border-ink/15 bg-paper px-6 py-7 shadow-[8px_8px_0_rgba(61,31,12,0.10)] sm:px-8 sm:py-9">
         <Link href="/" className="inline-flex font-display text-2xl font-bold text-ink">MYBUDGET</Link>
         <AccentBars className="mt-6" />
@@ -97,9 +115,53 @@ function AuthForm() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Username</span><input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" required className="mt-2 w-full border border-ink/20 bg-cream px-4 py-3 text-sm outline-none focus:border-ember-deep" /></label>
-          <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Password</span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={6} className="mt-2 w-full border border-ink/20 bg-cream px-4 py-3 text-sm outline-none focus:border-ember-deep" /></label>
+          <label className="block">
+            <span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Password</span>
+            <div className="relative mt-2">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                required
+                minLength={6}
+                className="w-full border border-ink/20 bg-cream py-3 pl-4 pr-11 text-sm outline-none focus:border-ember-deep"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-soft transition-colors hover:text-ink"
+              >
+                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+              </button>
+            </div>
+          </label>
           {mode === "signup" ? (
-            <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Retype Password</span><input type="password" value={retypePassword} onChange={(event) => setRetypePassword(event.target.value)} autoComplete="new-password" required minLength={6} className="mt-2 w-full border border-ink/20 bg-cream px-4 py-3 text-sm outline-none focus:border-ember-deep" /></label>
+            <label className="block">
+              <span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Retype Password</span>
+              <div className="relative mt-2">
+                <input
+                  type={showRetypePassword ? "text" : "password"}
+                  value={retypePassword}
+                  onChange={(event) => setRetypePassword(event.target.value)}
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  className="w-full border border-ink/20 bg-cream py-3 pl-4 pr-11 text-sm outline-none focus:border-ember-deep"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRetypePassword((prev) => !prev)}
+                  aria-label={showRetypePassword ? "Hide retyped password" : "Show retyped password"}
+                  aria-pressed={showRetypePassword}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-soft transition-colors hover:text-ink"
+                >
+                  {showRetypePassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+                </button>
+              </div>
+            </label>
           ) : null}
 
           {error ? <p className="border border-red-700/20 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p> : null}

@@ -7,6 +7,15 @@ function transactionBalanceDelta(type: unknown, amount: number) {
   return 0;
 }
 
+const EDIT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isWithinEditWindow(createdAt: string | null | undefined): boolean {
+  if (!createdAt) return false;
+  const createdMs = new Date(createdAt).getTime();
+  if (!Number.isFinite(createdMs)) return false;
+  return Date.now() - createdMs <= EDIT_WINDOW_MS;
+}
+
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const auth = await getRequestUser(request); if (!("supabase" in auth)) return Response.json({ error: auth.error }, { status: auth.status });
   const { id } = await context.params; const { data, error } = await auth.supabase.from("transactions").select("*").eq("id", id).single();
@@ -21,13 +30,20 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
   const { data: existingTx, error: existingTxError } = await auth.supabase
     .from("transactions")
-    .select("id,account_id,type,amount")
+    .select("id,account_id,type,amount,created_at")
     .eq("id", id)
     .eq("user_id", auth.user.id)
     .single();
 
   if (existingTxError || !existingTx) {
     return Response.json({ error: "Transaction not found." }, { status: 404 });
+  }
+
+  if (!isWithinEditWindow(existingTx.created_at)) {
+    return Response.json(
+      { error: "Transaction is locked. Transactions older than 7 days can no longer be modified." },
+      { status: 403 },
+    );
   }
 
   const previousAmount = Number(existingTx.amount);
@@ -110,6 +126,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   };
   delete payload.id;
   delete payload.user_id;
+  delete payload.created_at;
 
   const { data, error } = await auth.supabase
     .from("transactions")
@@ -140,13 +157,20 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
 
   const { data: existingTx, error: existingTxError } = await auth.supabase
     .from("transactions")
-    .select("id,account_id,type,amount")
+    .select("id,account_id,type,amount,created_at")
     .eq("id", id)
     .eq("user_id", auth.user.id)
     .single();
 
   if (existingTxError || !existingTx) {
     return Response.json({ error: "Transaction not found." }, { status: 404 });
+  }
+
+  if (!isWithinEditWindow(existingTx.created_at)) {
+    return Response.json(
+      { error: "Transaction is locked. Transactions older than 7 days can no longer be modified." },
+      { status: 403 },
+    );
   }
 
   const amount = Number(existingTx.amount);

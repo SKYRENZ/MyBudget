@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { formatCurrency, getCurrencySymbol, toDisplayAmount, toStoredUsd } from "@/lib/currency";
 import type { Account, FinancialGoal, SavingsGoal } from "@/lib/database-types";
+import { useHideAmounts, usePrivacyConfig } from "@/lib/privacy-preferences";
 
 type PlanningDialog = "contribution" | "savings" | "goal" | null;
 type DeleteTarget =
@@ -16,6 +18,8 @@ type DeleteTarget =
   | null;
 
 export default function SavingsPage() {
+  useHideAmounts();
+  usePrivacyConfig();
   const [savings, setSavings] = useState<SavingsGoal[]>([]);
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -262,7 +266,7 @@ export default function SavingsPage() {
       <PageHeader
         eyebrow="Future planning"
         title="Planning"
-        description="Manage savings funds and long-term financial goals in one place."
+        description="Manage savings funds, long-term financial goals and recurring transactions."
         actions={
           <span data-tour="planning-actions" className="inline-flex flex-wrap gap-2">
             <ActionButton primary onClick={() => { resetFormFields(); setDialog("contribution"); }}>Add contribution</ActionButton>
@@ -271,6 +275,21 @@ export default function SavingsPage() {
           </span>
         }
       />
+
+      <div className="mt-5 flex gap-0 border-b border-ink/12 dark:border-white/10">
+        <Link
+          href="/savings"
+          className="border-b-2 border-ember-deep px-4 py-2.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-ember-deep"
+        >
+          Savings &amp; Goals
+        </Link>
+        <Link
+          href="/recurring"
+          className="border-b-2 border-transparent px-4 py-2.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-ink-soft transition-colors hover:text-ink dark:text-[#cfc2af]"
+        >
+          Recurring Transactions
+        </Link>
+      </div>
 
       {error ? <p className="mt-6 border border-ember-deep/30 bg-paper p-4 text-sm text-ember-deep">{error}</p> : null}
 
@@ -288,7 +307,7 @@ export default function SavingsPage() {
                   <Skeleton className="mt-5 h-8 w-32" />
                   <Skeleton className="mt-2 h-3 w-28" />
                   <Skeleton className="mt-5 h-2 w-full" />
-                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4">
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 dark:border-white/10 pt-4">
                     <Skeleton className="h-6 w-20" />
                     <Skeleton className="ml-auto h-6 w-20" />
                   </div>
@@ -309,10 +328,10 @@ export default function SavingsPage() {
                       </div>
                     </div>
                     <h3 className="mt-3 font-display text-2xl font-bold">{goal.name}</h3>
-                    <p className="mt-5 text-3xl font-bold">{formatCurrency(saved)}</p>
-                    <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
+                    <p className="mt-5 text-3xl font-bold">{formatCurrency(saved, "goals_savings")}</p>
+                    <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target, "goals_savings")} · {percent}%</p>
                     <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
-                    <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Monthly</p><b>{formatCurrency(Number(goal.monthly_contribution))}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - saved, 0))}</b></div></div>
+                    <div className="mt-5 grid grid-cols-2 border-t border-ink/10 dark:border-white/10 pt-4 text-xs"><div><p className="text-ink-soft">Monthly</p><b>{formatCurrency(Number(goal.monthly_contribution), "goals_savings")}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - saved, 0), "goals_savings")}</b></div></div>
                   </article>
                 );
               })}
@@ -337,7 +356,7 @@ export default function SavingsPage() {
                   <Skeleton className="mt-5 h-8 w-36" />
                   <Skeleton className="mt-2 h-3 w-28" />
                   <Skeleton className="mt-5 h-2 w-full" />
-                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4">
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 dark:border-white/10 pt-4">
                     <Skeleton className="h-6 w-24" />
                     <Skeleton className="ml-auto h-6 w-24" />
                   </div>
@@ -360,10 +379,10 @@ export default function SavingsPage() {
                     </div>
                   </div>
                   <p className="mt-2 text-sm text-ink-soft">{goal.description || "No description"}</p>
-                  <p className="mt-5 text-3xl font-bold">{formatCurrency(current)}</p>
-                  <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target)} · {percent}%</p>
+                  <p className="mt-5 text-3xl font-bold">{formatCurrency(current, "goals_savings")}</p>
+                  <p className="mt-1 text-xs text-ink-soft">of {formatCurrency(target, "goals_savings")} · {percent}%</p>
                   <div className="mt-5 h-2 bg-ink/10"><div className="h-full bg-ember-deep" style={{ width: `${Math.min(percent, 100)}%` }} /></div>
-                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 pt-4 text-xs"><div><p className="text-ink-soft">Deadline</p><b>{goal.deadline || "Not set"}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - current, 0))}</b></div></div>
+                  <div className="mt-5 grid grid-cols-2 border-t border-ink/10 dark:border-white/10 pt-4 text-xs"><div><p className="text-ink-soft">Deadline</p><b>{goal.deadline || "Not set"}</b></div><div className="text-right"><p className="text-ink-soft">Remaining</p><b>{formatCurrency(Math.max(target - current, 0), "goals_savings")}</b></div></div>
                 </article>
                 );
               })}
@@ -372,15 +391,15 @@ export default function SavingsPage() {
       </section>
 
       {dialog ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeDialog(); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="planning-dialog-title" className="max-h-[92svh] w-full overflow-y-auto border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
-            <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Planning</p><h2 id="planning-dialog-title" className="mt-1 font-display text-2xl font-bold">{dialog === "savings" ? (editingSaving ? "Edit savings fund" : "Create savings fund") : dialog === "contribution" ? "Add contribution" : (editingGoal ? "Edit long-term goal" : "Create long-term goal")}</h2></div><button type="button" aria-label="Close planning form" onClick={closeDialog} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeDialog(); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="planning-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+            <div className="flex items-start justify-between border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Planning</p><h2 id="planning-dialog-title" className="mt-1 font-display text-2xl font-bold">{dialog === "savings" ? (editingSaving ? "Edit savings fund" : "Create savings fund") : dialog === "contribution" ? "Add contribution" : (editingGoal ? "Edit long-term goal" : "Create long-term goal")}</h2></div><button type="button" aria-label="Close planning form" onClick={closeDialog} className="grid size-9 place-items-center border border-ink/15 dark:border-white/15 text-xl text-ink-soft">×</button></div>
 
             {dialog === "contribution" ? (
               <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
                 <label className="block sm:col-span-2">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Fund or goal</span>
-                  <select value={selectedGoalId} onChange={(event) => setSelectedGoalId(event.target.value)} className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]">
+                  <select value={selectedGoalId} onChange={(event) => setSelectedGoalId(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]">
                     <option value="">Select fund or goal</option>
                     {savings.length > 0 ? <optgroup label="Savings funds">{savings.map((goal) => <option key={goal.id} value={`savings:${goal.id}`}>{goal.name}</option>)}</optgroup> : null}
                     {goals.length > 0 ? <optgroup label="Long-term goals">{goals.map((goal) => <option key={goal.id} value={`goal:${goal.id}`}>{goal.name}</option>)}</optgroup> : null}
@@ -388,58 +407,58 @@ export default function SavingsPage() {
                 </label>
                 <label className="block sm:col-span-2">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">From account</span>
-                  <select value={selectedAccountId} onChange={(event) => setSelectedAccountId(event.target.value)} className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]">
+                  <select value={selectedAccountId} onChange={(event) => setSelectedAccountId(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]">
                     <option value="">Select source account</option>
                     {accounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {account.name} ({formatCurrency(Number(account.balance))})
+                        {account.name} ({formatCurrency(Number(account.balance), "accounts")})
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="block">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Amount ({currencySymbol})</span>
-                  <input type="number" min="0.01" step="0.01" value={contributionAmount} onChange={(event) => setContributionAmount(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" />
+                  <input type="number" min="0.01" step="0.01" value={contributionAmount} onChange={(event) => setContributionAmount(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" />
                 </label>
                 <label className="block">
                   <span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Source / notes (optional)</span>
-                  <input value={contributionNotes} onChange={(event) => setContributionNotes(event.target.value)} placeholder="e.g. Salary, Bonus" className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" />
+                  <input value={contributionNotes} onChange={(event) => setContributionNotes(event.target.value)} placeholder="e.g. Salary, Bonus" className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" />
                 </label>
               </div>
             ) : dialog === "goal" ? (
               <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
-                <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Goal name</span><input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Description</span><input value={description} onChange={(event) => setDescription(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Target amount ({currencySymbol})</span><input type="number" min="0.01" step="0.01" value={targetAmount} onChange={(event) => setTargetAmount(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Deadline</span><input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className={`block ${editingGoal ? "" : "sm:col-span-2"}`}><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Priority</span><select value={priority} onChange={(event) => setPriority(event.target.value as "low" | "medium" | "high")} className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
+                <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Goal name</span><input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Description</span><input value={description} onChange={(event) => setDescription(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Target amount ({currencySymbol})</span><input type="number" min="0.01" step="0.01" value={targetAmount} onChange={(event) => setTargetAmount(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Deadline</span><input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className={`block ${editingGoal ? "" : "sm:col-span-2"}`}><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Priority</span><select value={priority} onChange={(event) => setPriority(event.target.value as "low" | "medium" | "high")} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
                 {editingGoal ? (
-                  <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Status</span><select value={status} onChange={(event) => setStatus(event.target.value as "active" | "completed" | "archived")} className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
+                  <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Status</span><select value={status} onChange={(event) => setStatus(event.target.value as "active" | "completed" | "archived")} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
                 ) : null}
               </div>
             ) : (
               <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
-                <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Fund name</span><input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Target amount ({currencySymbol})</span><input type="number" min="0.01" step="0.01" value={targetAmount} onChange={(event) => setTargetAmount(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Current amount ({currencySymbol})</span><input type="number" min="0" step="0.01" value={currentAmount} onChange={(event) => setCurrentAmount(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Monthly contribution ({currencySymbol})</span><input type="number" min="0" step="0.01" value={monthlyContribution} onChange={(event) => setMonthlyContribution(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
-                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Target date</span><input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Fund name</span><input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Target amount ({currencySymbol})</span><input type="number" min="0.01" step="0.01" value={targetAmount} onChange={(event) => setTargetAmount(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Current amount ({currencySymbol})</span><input type="number" min="0" step="0.01" value={currentAmount} onChange={(event) => setCurrentAmount(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Monthly contribution ({currencySymbol})</span><input type="number" min="0" step="0.01" value={monthlyContribution} onChange={(event) => setMonthlyContribution(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
+                <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Target date</span><input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-transparent px-3 py-3 text-sm" /></label>
                 {editingSaving ? (
-                  <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Status</span><select value={status} onChange={(event) => setStatus(event.target.value as "active" | "completed" | "archived")} className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
+                  <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Status</span><select value={status} onChange={(event) => setStatus(event.target.value as "active" | "completed" | "archived")} className="mt-2 w-full border border-ink/15 dark:border-white/15 bg-paper px-3 py-3 text-sm dark:bg-[#211b17]"><option value="active">Active</option><option value="completed">Completed</option><option value="archived">Archived</option></select></label>
                 ) : null}
               </div>
             )}
 
             {error ? <p className="mx-5 mb-4 border border-red-700/20 bg-red-50 px-3 py-2 text-sm text-red-800 sm:mx-6">{error}</p> : null}
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6"><ActionButton onClick={closeDialog}>Cancel</ActionButton><ActionButton primary onClick={dialog === "contribution" ? submitContribution : dialog === "goal" ? submitFinancialGoal : submitSavingGoal}>{saving ? "Saving…" : dialog === "contribution" ? "Add contribution" : (editingSaving || editingGoal) ? "Save changes" : "Save"}</ActionButton></div>
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6"><ActionButton onClick={closeDialog}>Cancel</ActionButton><ActionButton primary onClick={dialog === "contribution" ? submitContribution : dialog === "goal" ? submitFinancialGoal : submitSavingGoal}>{saving ? "Saving…" : dialog === "contribution" ? "Add contribution" : (editingSaving || editingGoal) ? "Save changes" : "Save"}</ActionButton></div>
           </section>
         </div>
       ) : null}
 
       {deleteTarget ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
-            <div className="border-b border-ink/15 px-5 py-4 sm:px-6">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+            <div className="border-b border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-red-700 dark:text-red-400">Confirm deletion</p>
               <h2 id="delete-confirm-title" className="mt-1 font-display text-2xl font-bold">
                 Delete {deleteTarget.kind === "savings" ? "savings fund" : "goal"}?
@@ -451,7 +470,7 @@ export default function SavingsPage() {
                 {deleteTarget.kind === "savings" ? " Any recorded contributions for this fund will also be removed." : ""} This action cannot be undone.
               </p>
             </div>
-            <div className="flex justify-end gap-2 border-t border-ink/15 px-5 py-4 sm:px-6">
+            <div className="flex justify-end gap-2 border-t border-ink/15 dark:border-white/15 px-5 py-4 sm:px-6">
               <ActionButton onClick={() => setDeleteTarget(null)}>Cancel</ActionButton>
               <button
                 type="button"
