@@ -176,9 +176,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Container>
       </header>
 
-      <main className="pb-24 lg:pb-10">{children}</main>
+      <main className="pb-[calc(6rem+var(--keyboard-inset,0px))] lg:pb-[calc(2.5rem+var(--keyboard-inset,0px))]">{children}</main>
 
-      <nav className="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 border border-ink/15 bg-paper/95 px-1 py-1 shadow-lg backdrop-blur lg:hidden dark:border-white/10 dark:bg-[#211b17]/95" aria-label="Mobile navigation">
+      <nav className="mobile-bottom-nav fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 border border-ink/15 bg-paper/95 px-1 py-1 shadow-lg backdrop-blur lg:hidden dark:border-white/10 dark:bg-[#211b17]/95" aria-label="Mobile navigation">
         {nav.map(([label, href]) => (
           <Link
             key={href}
@@ -192,8 +192,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {settingsOpen ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Preferences</p><h2 id="settings-dialog-title" className="mt-1 font-display text-2xl font-bold">Settings</h2></div><button type="button" aria-label="Close settings" onClick={() => setSettingsOpen(false)} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
             <div className="grid gap-5 p-5 sm:p-6">
               <fieldset><legend className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Display currency</legend><div className="mt-2 grid grid-cols-2 border border-ink/15"><button type="button" onClick={() => setCurrencyCode("USD")} className={`py-3 text-sm font-bold ${currencyCode === "USD" ? "bg-ink text-paper" : "text-ink-soft"}`}>US Dollar · USD</button><button type="button" onClick={() => setCurrencyCode("PHP")} className={`py-3 text-sm font-bold ${currencyCode === "PHP" ? "bg-ink text-paper" : "text-ink-soft"}`}>Philippine Peso · PHP</button></div></fieldset>

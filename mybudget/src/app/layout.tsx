@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { MobileKeyboardViewport } from "@/components/layout/MobileKeyboardViewport";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -25,6 +26,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -32,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-cream text-ink">
+        <MobileKeyboardViewport />
         {children}
       </body>
     </html>

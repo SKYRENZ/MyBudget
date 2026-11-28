@@ -93,7 +93,7 @@ function AuthForm() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-cream px-5 py-10">
+    <main className="flex min-h-svh items-center justify-center bg-cream px-5 py-10 pb-[calc(2.5rem+var(--keyboard-inset,0px))]">
       <section className="w-full max-w-md border border-ink/15 bg-paper px-6 py-7 shadow-[8px_8px_0_rgba(61,31,12,0.10)] sm:px-8 sm:py-9">
         <Link href="/" className="inline-flex font-display text-2xl font-bold text-ink">MYBUDGET</Link>
         <AccentBars className="mt-6" />

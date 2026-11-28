@@ -250,7 +250,7 @@ export default function AccountsPage() {
 
       {dialog ? (
         <div
-          className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5"
+          className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setDialog(null);
@@ -260,7 +260,7 @@ export default function AccountsPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="account-dialog-title"
-            className="max-h-[92svh] w-full overflow-y-auto border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
+            className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6">
               <div>
@@ -422,7 +422,7 @@ export default function AccountsPage() {
 
       {deleteTarget ? (
         <div
-          className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5"
+          className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !deleting) setDeleteTarget(null);
@@ -432,7 +432,7 @@ export default function AccountsPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-account-title"
-            className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
+            className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
             <div className="border-b border-ink/15 px-5 py-4 sm:px-6">
               <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-red-700 dark:text-red-400">

@@ -345,7 +345,7 @@ export default function ExpensesPage() {
       </section>
       {showExpenseForm ? (
         <div
-          className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-5"
+          className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-5"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setShowExpenseForm(false);
@@ -355,7 +355,7 @@ export default function ExpensesPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="expense-dialog-title"
-            className="max-h-[92svh] w-full overflow-y-auto border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-2xl sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
+            className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-2xl sm:border-2 dark:border-white/10 dark:bg-[#211b17]"
           >
             <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-ink/15 bg-paper px-5 py-4 dark:border-white/10 dark:bg-[#211b17] sm:px-6">
               <div>
@@ -384,8 +384,8 @@ export default function ExpensesPage() {
       ) : null}
 
       {showIncomeForm ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowIncomeForm(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="income-dialog-title" className="max-h-[92svh] w-full overflow-y-auto border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-xl sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowIncomeForm(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="income-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-xl sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Money in</p><h2 id="income-dialog-title" className="mt-1 font-display text-2xl font-bold">Add income</h2></div><button type="button" aria-label="Close income form" onClick={() => setShowIncomeForm(false)} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
             <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
               <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Description</span><input autoFocus value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Salary, freelance, refund…" className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep" /></label>
@@ -400,8 +400,8 @@ export default function ExpensesPage() {
       ) : null}
 
       {showCategoryForm ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCategoryForm(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="category-dialog-title" className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCategoryForm(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="category-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Organization</p><h2 id="category-dialog-title" className="mt-1 font-display text-2xl font-bold">Add category</h2></div><button type="button" aria-label="Close category form" onClick={() => setShowCategoryForm(false)} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
             <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
               <label className="block sm:col-span-2"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Category name</span><input autoFocus value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Pets, gifts, childcare…" className="mt-2 w-full border border-ink/15 bg-transparent px-3 py-3 text-sm outline-none focus:border-ember-deep" /></label>
@@ -414,8 +414,8 @@ export default function ExpensesPage() {
       ) : null}
 
       {showBudgetForm ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowBudgetForm(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="budget-dialog-title" className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowBudgetForm(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="budget-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Monthly planning</p><h2 id="budget-dialog-title" className="mt-1 font-display text-2xl font-bold">Edit budget limits</h2></div><button type="button" aria-label="Close budget form" onClick={() => setShowBudgetForm(false)} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
             <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
               <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft">Category</span><select value={budgetCategoryId} onChange={(event) => setBudgetCategoryId(event.target.value)} className="mt-2 w-full border border-ink/15 bg-paper px-3 py-3 text-sm outline-none dark:bg-[#211b17]"><option value="">Select category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
@@ -428,8 +428,8 @@ export default function ExpensesPage() {
       ) : null}
 
       {showImportForm ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowImportForm(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowImportForm(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.14em] text-ember-deep">CSV import</p><h2 id="import-dialog-title" className="mt-1 font-display text-2xl font-bold">Import transactions</h2></div><button type="button" aria-label="Close CSV import" onClick={() => setShowImportForm(false)} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
             <div className="p-5 sm:p-6"><p className="text-sm leading-6 text-ink-soft">Use columns: <b>description, amount, type, date, category_id, account_id</b>. The type may be <b>expense</b> or <b>income</b>.</p><input type="file" accept=".csv,text/csv" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importCsv(file); }} className="mt-5 block w-full border border-ink/15 px-3 py-3 text-sm file:mr-4 file:border-0 file:bg-ember-deep file:px-3 file:py-2 file:text-xs file:font-bold file:uppercase file:text-white" /></div>
             {error ? <p className="mx-5 mb-4 border border-red-700/20 bg-red-50 px-3 py-2 text-sm text-red-800 sm:mx-6">{error}</p> : null}

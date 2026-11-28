@@ -372,8 +372,8 @@ export default function SavingsPage() {
       </section>
 
       {dialog ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeDialog(); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="planning-dialog-title" className="max-h-[92svh] w-full overflow-y-auto border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeDialog(); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="planning-dialog-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-lg sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="flex items-start justify-between border-b border-ink/15 px-5 py-4 sm:px-6"><div><p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-ember-deep">Planning</p><h2 id="planning-dialog-title" className="mt-1 font-display text-2xl font-bold">{dialog === "savings" ? (editingSaving ? "Edit savings fund" : "Create savings fund") : dialog === "contribution" ? "Add contribution" : (editingGoal ? "Edit long-term goal" : "Create long-term goal")}</h2></div><button type="button" aria-label="Close planning form" onClick={closeDialog} className="grid size-9 place-items-center border border-ink/15 text-xl text-ink-soft">×</button></div>
 
             {dialog === "contribution" ? (
@@ -437,8 +437,8 @@ export default function SavingsPage() {
       ) : null}
 
       {deleteTarget ? (
-        <div className="fixed inset-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" className="w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
+        <div className="mobile-modal-backdrop fixed inset-x-0 z-70 flex items-end justify-center bg-ink/35 backdrop-blur-[2px] sm:items-center sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setDeleteTarget(null); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" className="mobile-modal-panel w-full border border-ink/15 bg-paper shadow-[12px_12px_0_rgba(61,31,12,0.18)] sm:max-w-md sm:border-2 dark:border-white/10 dark:bg-[#211b17]">
             <div className="border-b border-ink/15 px-5 py-4 sm:px-6">
               <p className="text-[0.58rem] font-bold uppercase tracking-[0.18em] text-red-700 dark:text-red-400">Confirm deletion</p>
               <h2 id="delete-confirm-title" className="mt-1 font-display text-2xl font-bold">
