@@ -129,7 +129,7 @@ export const api = {
           expenseLayout?: "transactions_first" | "categories_first";
           transactionDisplay?: "pagination" | "infinite";
           categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
-          dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+          dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" | "MMM D";
           budgetBehavior?: "carry_forward" | "manual";
           pageSize?: 25 | 50 | 100;
           defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
@@ -149,7 +149,7 @@ export const api = {
       expenseLayout?: "transactions_first" | "categories_first";
       transactionDisplay?: "pagination" | "infinite";
       categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
-      dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+      dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" | "MMM D";
       budgetBehavior?: "carry_forward" | "manual";
       pageSize?: 25 | 50 | 100;
       defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";

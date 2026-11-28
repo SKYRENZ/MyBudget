@@ -148,10 +148,25 @@ export function getServerDefaultPageSizeSnapshot(): DefaultPageSize {
 }
 
 // ─── Date Format (placeholder) ────────────────────────────────────────────────
-export type DateFormat = "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD";
+export type DateFormat = "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" | "MMM D";
 const DATE_FORMAT_KEY = "mybudget-date-format";
 const DATE_FORMAT_EVENT = "mybudget-date-format-change";
-const VALID_DATE_FORMATS: DateFormat[] = ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"];
+const VALID_DATE_FORMATS: DateFormat[] = ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD", "MMM D"];
+
+const SHORT_MONTH_LABELS = [
+  "Jan.",
+  "Feb.",
+  "Mar.",
+  "Apr.",
+  "May",
+  "Jun.",
+  "Jul.",
+  "Aug.",
+  "Sep.",
+  "Oct.",
+  "Nov.",
+  "Dec.",
+];
 
 export function getDateFormat(): DateFormat {
   const userId = getCurrentUserIdSync();
@@ -205,6 +220,11 @@ export function formatDisplayDate(
       return `${day}/${month}/${year}`;
     case "YYYY-MM-DD":
       return `${year}-${month}-${day}`;
+    case "MMM D": {
+      const monthIndex = Number(month) - 1;
+      const monthLabel = SHORT_MONTH_LABELS[monthIndex] ?? month;
+      return `${monthLabel} ${Number(day)}`;
+    }
     case "MM/DD/YYYY":
     default:
       return `${month}/${day}/${year}`;

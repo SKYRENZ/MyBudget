@@ -126,19 +126,30 @@ export function GeneralSettings() {
         </p>
         <fieldset className="mt-2">
           <legend className="sr-only">Date format</legend>
-          <div className="grid grid-cols-3 border border-ink/15 dark:border-white/10">
-            {(["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"] as DateFormat[]).map((fmt, i) => (
+          <div className="grid grid-cols-2 border border-ink/15 sm:grid-cols-4 dark:border-white/10">
+            {(
+              [
+                { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
+                { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
+                { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
+                { value: "MMM D", label: "Nov. 27" },
+              ] as { value: DateFormat; label: string }[]
+            ).map(({ value, label }, i) => (
               <button
-                key={fmt}
+                key={value}
                 type="button"
-                onClick={() => setDateFormat(fmt)}
-                className={`py-2.5 text-xs font-bold transition-colors ${i > 0 ? "border-l border-ink/15 dark:border-white/10" : ""} ${
-                  dateFormat === fmt
+                onClick={() => setDateFormat(value)}
+                className={`py-2.5 text-xs font-bold transition-colors ${
+                  i > 0 ? "border-t border-ink/15 sm:border-t-0 sm:border-l dark:border-white/10" : ""
+                } ${i === 1 ? "border-l border-t-0 dark:border-white/10" : ""} ${
+                  i === 3 ? "border-l dark:border-white/10" : ""
+                } ${
+                  dateFormat === value
                     ? "bg-ink text-paper dark:bg-[#f7eddd] dark:text-[#17120f]"
                     : "text-ink-soft hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
                 }`}
               >
-                {fmt}
+                {label}
               </button>
             ))}
           </div>
