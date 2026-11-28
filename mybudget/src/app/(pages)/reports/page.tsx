@@ -166,7 +166,7 @@ export default function ReportsPage() {
           id: "monthly-spending-change",
           tag: "Monthly spending",
           title: `Spending is up ${pct}% compared to ${previousMonth.month}`,
-          detail: `You have spent ${fmt(currentMonth.expenses)} so far in ${currentMonth.month}, up from ${fmt(previousMonth.expenses)} in ${previousMonth.month}.`,
+          detail: `You have spent ${formatCurrency(currentMonth.expenses)} so far in ${currentMonth.month}, up from ${formatCurrency(previousMonth.expenses)} in ${previousMonth.month}.`,
           tone: pct >= 15 ? "warning" : "neutral",
         });
       } else if (diff < 0) {
@@ -174,7 +174,7 @@ export default function ReportsPage() {
           id: "monthly-spending-change",
           tag: "Monthly spending",
           title: `Spending is down ${pct}% from ${previousMonth.month}`,
-          detail: `Current expenses of ${fmt(currentMonth.expenses)} are ${fmt(Math.abs(diff))} lower than ${previousMonth.month}.`,
+          detail: `Current expenses of ${formatCurrency(currentMonth.expenses)} are ${formatCurrency(Math.abs(diff))} lower than ${previousMonth.month}.`,
           tone: "positive",
         });
       } else {
@@ -182,7 +182,7 @@ export default function ReportsPage() {
           id: "monthly-spending-change",
           tag: "Monthly spending",
           title: `Spending is holding steady vs ${previousMonth.month}`,
-          detail: `Expenses in ${currentMonth.month} match ${previousMonth.month} at ${fmt(currentMonth.expenses)}.`,
+          detail: `Expenses in ${currentMonth.month} match ${previousMonth.month} at ${formatCurrency(currentMonth.expenses)}.`,
           tone: "neutral",
         });
       }
@@ -190,7 +190,7 @@ export default function ReportsPage() {
       list.push({
         id: "monthly-spending-change",
         tag: "Monthly spending",
-        title: `${fmt(currentMonth.expenses)} spent in ${currentMonth.month}`,
+        title: `${formatCurrency(currentMonth.expenses)} spent in ${currentMonth.month}`,
         detail: "Once two consecutive months of expenses are recorded, month-over-month spending changes will appear here.",
         tone: "neutral",
       });
@@ -260,18 +260,18 @@ export default function ReportsPage() {
       list.push({
         id: "overspending-warning",
         tag: "Overspending warning",
-        title: `${topOver.name} exceeded its monthly budget by ${fmt(topOver.over)}`,
+        title: `${topOver.name} exceeded its monthly budget by ${formatCurrency(topOver.over)}`,
         detail:
           overspentCategories.length > 1
-            ? `${overspentCategories.length} categories are currently above their monthly limit, led by ${topOver.name} (${fmt(topOver.spent)} of ${fmt(topOver.limit)}).`
-            : `You have spent ${fmt(topOver.spent)} against a ${fmt(topOver.limit)} monthly budget in ${topOver.name}.`,
+            ? `${overspentCategories.length} categories are currently above their monthly limit, led by ${topOver.name} (${formatCurrency(topOver.spent)} of ${formatCurrency(topOver.limit)}).`
+            : `You have spent ${formatCurrency(topOver.spent)} against a ${formatCurrency(topOver.limit)} monthly budget in ${topOver.name}.`,
         tone: "warning",
       });
     } else if (expenses > income && income > 0) {
       list.push({
         id: "overspending-warning",
         tag: "Overspending warning",
-        title: `Expenses exceed income by ${fmt(expenses - income)}`,
+        title: `Expenses exceed income by ${formatCurrency(expenses - income)}`,
         detail: "Recorded outflows are higher than total inflows. Review discretionary categories to restore a positive surplus.",
         tone: "warning",
       });
@@ -307,7 +307,7 @@ export default function ReportsPage() {
         id: "goal-progress",
         tag: "Goal progress",
         title: `${closest.name} is ${closestPct}% funded`,
-        detail: `Across ${combinedGoals.length} active ${combinedGoals.length === 1 ? "goal" : "goals"}, you have accumulated ${fmt(totalCurrent)} toward ${fmt(totalTarget)} (${overallPct}% overall).`,
+        detail: `Across ${combinedGoals.length} active ${combinedGoals.length === 1 ? "goal" : "goals"}, you have accumulated ${formatCurrency(totalCurrent)} toward ${formatCurrency(totalTarget)} (${overallPct}% overall).`,
         tone: closestPct >= 75 ? "positive" : "neutral",
       });
     }

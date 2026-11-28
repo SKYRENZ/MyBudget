@@ -14,6 +14,8 @@ function getSupabase() {
   }
   return supabaseClient;
 }
+// Use a shared instance for the rest of the file
+const supabase = getSupabase();
 
 // Synchronous helper to get current user ID (if Supabase session is available)
 function getCurrentUserIdSync(): string | null {
