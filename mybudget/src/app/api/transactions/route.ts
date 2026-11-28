@@ -1,6 +1,6 @@
 import { getRequestUser, jsonError } from "@/lib/supabase-server";
 
-const ALLOWED_PAGE_SIZES = new Set([25, 50, 100]);
+const ALLOWED_PAGE_SIZES = new Set([10, 25, 50, 100]);
 const ALLOWED_TYPES = new Set(["income", "expense", "transfer"]);
 
 function transactionBalanceDelta(type: unknown, amount: number) {

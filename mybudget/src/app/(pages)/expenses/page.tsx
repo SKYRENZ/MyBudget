@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { EditTransactionModal } from "@/components/transactions/EditTransactionModal";
 import { DeleteTransactionModal } from "@/components/transactions/DeleteTransactionModal";
 import { CreateRecurringModal } from "@/components/transactions/CreateRecurringModal";
+import { TransactionDetailCard } from "@/components/transactions/TransactionDetailCard";
 import { api } from "@/lib/api";
 import {
   type CategorySort,
@@ -43,6 +44,9 @@ import {
   getServerTransactionDisplaySnapshot,
   getTransactionDisplaySnapshot,
   subscribeTransactionDisplayMode,
+  getTransactionInteractionSnapshot,
+  getServerTransactionInteractionSnapshot,
+  subscribeTransactionInteraction,
 } from "@/lib/transaction-preferences";
 
 function currentLocalDate() {
@@ -58,6 +62,11 @@ export default function ExpensesPage() {
     subscribeTransactionDisplayMode,
     getTransactionDisplaySnapshot,
     getServerTransactionDisplaySnapshot,
+  );
+  const transactionInteraction = useSyncExternalStore(
+    subscribeTransactionInteraction,
+    getTransactionInteractionSnapshot,
+    getServerTransactionInteractionSnapshot,
   );
   const expenseLayout = useSyncExternalStore(
     subscribeExpenseLayout,
@@ -89,7 +98,7 @@ export default function ExpensesPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const [pageSizeOverride, setPageSizeOverride] = useState<25 | 50 | 100 | null>(null);
+  const [pageSizeOverride, setPageSizeOverride] = useState<10 | 25 | 50 | 100 | null>(null);
   const [sortOverride, setSortOverride] = useState<TransactionSort | null>(null);
   const [categorySortOverride, setCategorySortOverride] = useState<CategorySort | null>(null);
   const [showCustomizeSheet, setShowCustomizeSheet] = useState(false);
@@ -101,6 +110,7 @@ export default function ExpensesPage() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
   const [recurringTx, setRecurringTx] = useState<Transaction | null>(null);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   const [filters, setFilters] = useState<TransactionFilterState>(DEFAULT_TRANSACTION_FILTERS);
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -592,7 +602,7 @@ export default function ExpensesPage() {
     loadMoreSentinelRef,
     onFiltersChange: handleFiltersChange,
     onResetFilters: handleResetFilters,
-    onPageSizeChange: (size: 25 | 50 | 100) => {
+    onPageSizeChange: (size: 10 | 25 | 50 | 100) => {
       setPageSizeOverride(size);
       setPage(1);
     },
@@ -605,6 +615,8 @@ export default function ExpensesPage() {
     onEditTransaction: (tx: Transaction) => setEditingTx(tx),
     onDeleteTransaction: (tx: Transaction) => setDeletingTx(tx),
     onCreateRecurring: (tx: Transaction) => setRecurringTx(tx),
+    transactionInteraction,
+    onSelectTransaction: (tx: Transaction) => setSelectedTx(tx),
   };
 
   return (
@@ -1116,6 +1128,15 @@ export default function ExpensesPage() {
     </Container>
 
     {/* Transaction action modals */}
+    <TransactionDetailCard
+      transaction={selectedTx}
+      categories={categories}
+      accounts={accounts}
+      onClose={() => setSelectedTx(null)}
+      onEdit={(tx) => { setSelectedTx(null); setEditingTx(tx); }}
+      onDelete={(tx) => { setSelectedTx(null); setDeletingTx(tx); }}
+      onCreateRecurring={(tx) => { setSelectedTx(null); setRecurringTx(tx); }}
+    />
     {editingTx && (
       <EditTransactionModal
         transaction={editingTx}

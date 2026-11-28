@@ -21,11 +21,12 @@ export type UserPreferencesPayload = {
   categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
   dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" | "MMM D";
   budgetBehavior?: "carry_forward" | "manual";
-  pageSize?: 25 | 50 | 100;
+  pageSize?: 10 | 25 | 50 | 100;
   defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
   defaultCategorySort?: CategorySortPreference;
   defaultAmountVisibility?: "show" | "hide";
   autoHideOnStartup?: boolean;
+  transactionInteraction?: "floating" | "inline";
 };
 
 const VALID_CATEGORY_SORTS: CategorySortPreference[] = [
@@ -68,7 +69,7 @@ function sanitizePreferences(raw: unknown): UserPreferencesPayload {
   if (obj.budgetBehavior === "carry_forward" || obj.budgetBehavior === "manual") {
     clean.budgetBehavior = obj.budgetBehavior;
   }
-  if (obj.pageSize === 25 || obj.pageSize === 50 || obj.pageSize === 100) {
+  if (obj.pageSize === 10 || obj.pageSize === 25 || obj.pageSize === 50 || obj.pageSize === 100) {
     clean.pageSize = obj.pageSize;
   }
   if (
@@ -90,6 +91,9 @@ function sanitizePreferences(raw: unknown): UserPreferencesPayload {
   }
   if (typeof obj.autoHideOnStartup === "boolean") {
     clean.autoHideOnStartup = obj.autoHideOnStartup;
+  }
+  if (obj.transactionInteraction === "floating" || obj.transactionInteraction === "inline") {
+    clean.transactionInteraction = obj.transactionInteraction;
   }
 
   return clean;

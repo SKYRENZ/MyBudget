@@ -1,5 +1,6 @@
 export type TransactionDisplayMode = "pagination" | "infinite";
 export type CategoryIndicatorStyle = "bar_dot" | "bar" | "dot" | "minimal";
+export type TransactionInteraction = "floating" | "inline";
 
 export const TRANSACTION_DISPLAY_EVENT = "mybudget-transaction-display-change";
 const STORAGE_KEY = "mybudget-transaction-display";
@@ -92,4 +93,37 @@ export function updateCategoryIndicatorStyle(style: CategoryIndicatorStyle) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(INDICATOR_STORAGE_KEY, style);
   window.dispatchEvent(new Event(CATEGORY_INDICATOR_EVENT));
+}
+
+// ─── Transaction Interaction ───────────────────────────────────────────────────
+export const TRANSACTION_INTERACTION_EVENT = "mybudget-transaction-interaction-change";
+const INTERACTION_STORAGE_KEY = "mybudget-transaction-interaction";
+
+export function getTransactionInteraction(): TransactionInteraction {
+  if (typeof window === "undefined") return "floating";
+  const val = window.localStorage.getItem(INTERACTION_STORAGE_KEY);
+  return val === "inline" ? "inline" : "floating";
+}
+
+export function subscribeTransactionInteraction(callback: () => void) {
+  window.addEventListener(TRANSACTION_INTERACTION_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(TRANSACTION_INTERACTION_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+export function getTransactionInteractionSnapshot(): TransactionInteraction {
+  return getTransactionInteraction();
+}
+
+export function getServerTransactionInteractionSnapshot(): TransactionInteraction {
+  return "floating";
+}
+
+export function updateTransactionInteraction(mode: TransactionInteraction) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(INTERACTION_STORAGE_KEY, mode);
+  window.dispatchEvent(new Event(TRANSACTION_INTERACTION_EVENT));
 }

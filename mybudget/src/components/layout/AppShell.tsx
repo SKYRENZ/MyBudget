@@ -32,6 +32,7 @@ import {
   subscribeTransactionDisplayMode,
   updateCategoryIndicatorStyle,
   updateTransactionDisplayMode,
+  updateTransactionInteraction,
 } from "@/lib/transaction-preferences";
 
 const nav = [
@@ -154,6 +155,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 updateDefaultAmountVisibility(preferences.defaultAmountVisibility);
               if (typeof preferences.autoHideOnStartup === "boolean")
                 updateAutoHideOnStartup(preferences.autoHideOnStartup);
+              if (preferences.transactionInteraction)
+                updateTransactionInteraction(preferences.transactionInteraction);
 
               const autoHide =
                 typeof preferences.autoHideOnStartup === "boolean"

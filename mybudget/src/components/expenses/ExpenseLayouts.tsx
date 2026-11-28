@@ -17,6 +17,7 @@ import {
   getServerCategoryIndicatorStyleSnapshot,
   subscribeCategoryIndicatorStyle,
   type TransactionDisplayMode,
+  type TransactionInteraction,
 } from "@/lib/transaction-preferences";
 
 // ─── Shared props used by both layouts ───────────────────────────────────────
@@ -29,7 +30,7 @@ export type ExpenseLayoutProps = {
   totalCount: number;
   totalPages: number;
   page: number;
-  pageSize: 25 | 50 | 100;
+  pageSize: 10 | 25 | 50 | 100;
   // Loading flags
   metaLoading: boolean;
   txLoading: boolean;
@@ -39,11 +40,12 @@ export type ExpenseLayoutProps = {
   categorySort: CategorySort;
   // Display
   displayMode: TransactionDisplayMode;
+  transactionInteraction: TransactionInteraction;
   loadMoreSentinelRef: RefObject<HTMLDivElement | null>;
   // Callbacks
   onFiltersChange: (next: TransactionFilterState) => void;
   onResetFilters: () => void;
-  onPageSizeChange: (size: 25 | 50 | 100) => void;
+  onPageSizeChange: (size: 10 | 25 | 50 | 100) => void;
   onPageChange: (p: number) => void;
   onLoadMore: () => void;
   onEditBudget: (category: Category) => void;
@@ -54,6 +56,7 @@ export type ExpenseLayoutProps = {
   onEditTransaction?: (tx: Transaction) => void;
   onDeleteTransaction?: (tx: Transaction) => void;
   onCreateRecurring?: (tx: Transaction) => void;
+  onSelectTransaction?: (tx: Transaction) => void;
 };
 
 // ─── Shared Transactions List (mobile + desktop) ──────────────────────────────
@@ -61,6 +64,7 @@ export function TransactionList({
   transactions,
   txLoading,
   displayMode,
+  transactionInteraction = "floating",
   loadingMore,
   page,
   totalPages,
@@ -73,22 +77,25 @@ export function TransactionList({
   onEditTransaction,
   onDeleteTransaction,
   onCreateRecurring,
+  onSelectTransaction,
 }: {
   transactions: Transaction[];
   txLoading: boolean;
   displayMode: TransactionDisplayMode;
+  transactionInteraction?: TransactionInteraction;
   loadingMore: boolean;
   page: number;
   totalPages: number;
   totalCount: number;
-  pageSize: 25 | 50 | 100;
+  pageSize: 10 | 25 | 50 | 100;
   onPageChange: (p: number) => void;
-  onPageSizeChange: (size: 25 | 50 | 100) => void;
+  onPageSizeChange: (size: 10 | 25 | 50 | 100) => void;
   onLoadMore: () => void;
   loadMoreSentinelRef: React.RefObject<HTMLDivElement | null>;
   onEditTransaction?: (tx: Transaction) => void;
   onDeleteTransaction?: (tx: Transaction) => void;
   onCreateRecurring?: (tx: Transaction) => void;
+  onSelectTransaction?: (tx: Transaction) => void;
 }) {
   useHideAmounts();
   usePrivacyConfig();
@@ -106,80 +113,160 @@ export function TransactionList({
       ? transactions.length
       : Math.min(page * pageSize, totalCount);
 
+  // ── Date grouping (floating mode) ───────────────────────────────────────
+  const isFloating = transactionInteraction === "floating";
+
+  function getDateLabel(dateStr: string): string {
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const yesterday = new Date(today.getTime() - 86400000);
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+    if (dateStr === todayKey) return "Today";
+    if (dateStr === yesterdayKey) return "Yesterday";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  // Group by date — only used in floating mode
+  const grouped: Record<string, Transaction[]> = {};
+  if (isFloating) {
+    for (const tx of transactions) {
+      const key = tx.transaction_date;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(tx);
+    }
+  }
+  const dateKeys = Object.keys(grouped).sort().reverse();
+
   return (
     <>
       {/* Mobile stacked list */}
-      <div className="min-w-0 divide-y divide-ink/10 md:hidden dark:divide-white/10">
+      <div className="min-w-0 md:hidden">
         {txLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between gap-4 p-4">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-36" />
-                <Skeleton className="h-3 w-28" />
+          <div className="divide-y divide-ink/10 dark:divide-white/10">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4 p-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+                <Skeleton className="h-4 w-20" />
               </div>
-              <Skeleton className="h-4 w-20" />
-            </div>
-          ))
+            ))}
+          </div>
         ) : transactions.length === 0 ? (
           <p className="p-5 text-sm text-ink-soft dark:text-[#cfc2af]">
             No matching transactions found.
           </p>
-        ) : (
-          transactions.map((row) => {
-            const catColor = row.categories?.color ?? null;
-            return (
-              <div
-                key={row.id}
-                className="group flex min-w-0 items-center justify-between gap-3 px-4 py-3.5"
-                style={showBar && catColor ? { borderLeft: `3px solid ${catColor}` } : undefined}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
-                    {row.description || (row.type === "income" ? "Income" : "Expense")}
-                  </p>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-ink-soft dark:text-[#cfc2af]">
-                    {showDot && catColor ? (
-                      <span
-                        className="mr-0.5 inline-block size-2 shrink-0 rounded-full"
-                        style={{ backgroundColor: catColor }}
-                        aria-hidden="true"
-                      />
-                    ) : null}
-                    <span className="truncate">
-                      {row.categories?.icon ? `${row.categories.icon} ` : ""}
-                      {row.categories?.name || row.type}
-                      {row.accounts?.name ? ` · ${row.accounts.name}` : ""} · {formatDisplayDate(row.transaction_date, dateFormat)}
-                    </span>
-                    <TransactionStatusIcons transaction={row} />
+        ) : isFloating ? (
+          // ── FLOATING MODE: date-grouped compact rows ──────────────────
+          <div>
+            {dateKeys.map((dateKey) => (
+              <div key={dateKey}>
+                {/* Date header */}
+                <div className="border-b border-ink/10 bg-ink/3 px-4 py-2 dark:border-white/10 dark:bg-white/3">
+                  <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-ink-soft dark:text-[#cfc2af]">
+                    {getDateLabel(dateKey)}
                   </p>
                 </div>
-                <p
-                  className={`shrink-0 text-sm font-bold tabular-nums ${
-                    row.type === "income"
-                      ? "text-green-700 dark:text-green-400"
-                      : row.type === "expense"
-                        ? "text-ember-deep"
-                        : ""
-                  }`}
-                >
-                  {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
-                  {formatCurrency(Number(row.amount), "transactions")}
-                </p>
-                {(onEditTransaction || onDeleteTransaction || onCreateRecurring) && (
-                  <TransactionActionsMenu
-                    transaction={row}
-                    onEdit={onEditTransaction ?? (() => {})}
-                    onDelete={onDeleteTransaction ?? (() => {})}
-                    onCreateRecurring={onCreateRecurring ?? (() => {})}
-                  />
-                )}
+                {/* Compact rows */}
+                <div className="divide-y divide-ink/10 dark:divide-white/10">
+                  {grouped[dateKey].map((row) => {
+                    const catColor = row.categories?.color ?? null;
+                    return (
+                      <button
+                        key={row.id}
+                        type="button"
+                        onClick={() => onSelectTransaction?.(row)}
+                        className="flex w-full min-w-0 items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors active:bg-ink/5 dark:active:bg-white/5"
+                        style={showBar && catColor ? { borderLeft: `3px solid ${catColor}` } : undefined}
+                      >
+                        <p className="min-w-0 flex-1 truncate text-sm font-semibold">
+                          {row.description || (row.type === "income" ? "Income" : "Expense")}
+                        </p>
+                        <span className="flex shrink-0 items-center gap-1.5">
+                          <TransactionStatusIcons transaction={row} />
+                          <span
+                            className={`text-sm font-bold tabular-nums ${
+                              row.type === "income"
+                                ? "text-green-700 dark:text-green-400"
+                                : row.type === "expense"
+                                  ? "text-ember-deep"
+                                  : ""
+                            }`}
+                          >
+                            {row.type === "income" ? "+" : row.type === "expense" ? "\u2212" : ""}
+                            {formatCurrency(Number(row.amount), "transactions")}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            );
-          })
+            ))}
+          </div>
+        ) : (
+          // ── INLINE MODE: existing metadata rows ───────────────────────
+          <div className="divide-y divide-ink/10 dark:divide-white/10">
+            {transactions.map((row) => {
+              const catColor = row.categories?.color ?? null;
+              return (
+                <div
+                  key={row.id}
+                  className="group flex min-w-0 items-center justify-between gap-3 px-4 py-3.5"
+                  style={showBar && catColor ? { borderLeft: `3px solid ${catColor}` } : undefined}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">
+                      {row.description || (row.type === "income" ? "Income" : "Expense")}
+                    </p>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-ink-soft dark:text-[#cfc2af]">
+                      {showDot && catColor ? (
+                        <span
+                          className="mr-0.5 inline-block size-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: catColor }}
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      <span className="truncate">
+                        {row.categories?.name || row.type}
+                        {row.accounts?.name ? ` \u00b7 ${row.accounts.name}` : ""} \u00b7 {formatDisplayDate(row.transaction_date, dateFormat)}
+                      </span>
+                      <TransactionStatusIcons transaction={row} />
+                    </p>
+                  </div>
+                  <p
+                    className={`shrink-0 text-sm font-bold tabular-nums ${
+                      row.type === "income"
+                        ? "text-green-700 dark:text-green-400"
+                        : row.type === "expense"
+                          ? "text-ember-deep"
+                          : ""
+                    }`}
+                  >
+                    {row.type === "income" ? "+" : row.type === "expense" ? "\u2212" : ""}
+                    {formatCurrency(Number(row.amount), "transactions")}
+                  </p>
+                  {(onEditTransaction || onDeleteTransaction || onCreateRecurring) && (
+                    <TransactionActionsMenu
+                      transaction={row}
+                      onEdit={onEditTransaction ?? (() => {})}
+                      onDelete={onDeleteTransaction ?? (() => {})}
+                      onCreateRecurring={onCreateRecurring ?? (() => {})}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* Desktop table */}
+      {/* Desktop table — always shows full metadata with clickable rows in floating mode */}
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="text-[0.58rem] uppercase tracking-[0.16em] text-ink-soft dark:text-[#cfc2af]">
@@ -221,7 +308,11 @@ export function TransactionList({
               : transactions.map((row) => {
                   const catColor = row.categories?.color ?? null;
                   return (
-                    <tr key={row.id} className="group border-t border-ink/10 dark:border-white/10">
+                    <tr
+                      key={row.id}
+                      className={`group border-t border-ink/10 dark:border-white/10 ${isFloating ? "cursor-pointer hover:bg-ink/3 dark:hover:bg-white/3" : ""}`}
+                      onClick={isFloating ? () => onSelectTransaction?.(row) : undefined}
+                    >
                       <td
                         className="px-5 py-4 font-bold"
                         style={showBar && catColor ? { borderLeft: `3px solid ${catColor}` } : undefined}
@@ -247,10 +338,10 @@ export function TransactionList({
                             </span>
                           </span>
                         ) : (
-                          "—"
+                          "\u2014"
                         )}
                       </td>
-                      <td>{row.accounts?.name || "—"}</td>
+                      <td>{row.accounts?.name || "\u2014"}</td>
                       <td className="tabular-nums">
                         <span className="inline-flex items-center gap-1.5">
                           <span>{formatDisplayDate(row.transaction_date, dateFormat)}</span>
@@ -266,11 +357,11 @@ export function TransactionList({
                               : ""
                         }`}
                       >
-                        {row.type === "income" ? "+" : row.type === "expense" ? "−" : ""}
+                        {row.type === "income" ? "+" : row.type === "expense" ? "\u2212" : ""}
                         {formatCurrency(Number(row.amount), "transactions")}
                       </td>
-                      <td className="pr-3">
-                        {(onEditTransaction || onDeleteTransaction || onCreateRecurring) && (
+                      <td className="pr-3" onClick={(e) => e.stopPropagation()}>
+                        {!isFloating && (onEditTransaction || onDeleteTransaction || onCreateRecurring) && (
                           <TransactionActionsMenu
                             transaction={row}
                             onEdit={onEditTransaction ?? (() => {})}
@@ -303,10 +394,11 @@ export function TransactionList({
               <select
                 value={pageSize}
                 onChange={(e) => {
-                  onPageSizeChange(Number(e.target.value) as 25 | 50 | 100);
+                  onPageSizeChange(Number(e.target.value) as 10 | 25 | 50 | 100);
                 }}
                 className="border border-ink/15 bg-paper px-2 py-1 text-xs outline-none dark:border-white/15 dark:bg-[#211b17]"
               >
+                <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
@@ -516,6 +608,7 @@ export function TransactionsFirstLayout({
   filters,
   categorySort,
   displayMode,
+  transactionInteraction,
   loadMoreSentinelRef,
   onFiltersChange,
   onResetFilters,
@@ -529,6 +622,7 @@ export function TransactionsFirstLayout({
   onEditTransaction,
   onDeleteTransaction,
   onCreateRecurring,
+  onSelectTransaction,
 }: ExpenseLayoutProps) {
   // Category chip filter
   const activeCategoryName = categories.find((c) => c.id === filters.categoryId)?.name ?? null;
@@ -616,6 +710,7 @@ export function TransactionsFirstLayout({
           transactions={transactions}
           txLoading={txLoading}
           displayMode={displayMode}
+          transactionInteraction={transactionInteraction}
           loadingMore={loadingMore}
           page={page}
           totalPages={totalPages}
@@ -628,6 +723,7 @@ export function TransactionsFirstLayout({
           onEditTransaction={onEditTransaction}
           onDeleteTransaction={onDeleteTransaction}
           onCreateRecurring={onCreateRecurring}
+          onSelectTransaction={onSelectTransaction}
         />
       </section>
 
@@ -736,6 +832,7 @@ export function CategoriesFirstLayout({
   filters,
   categorySort,
   displayMode,
+  transactionInteraction,
   loadMoreSentinelRef,
   onFiltersChange,
   onResetFilters,
@@ -749,6 +846,7 @@ export function CategoriesFirstLayout({
   onEditTransaction,
   onDeleteTransaction,
   onCreateRecurring,
+  onSelectTransaction,
 }: ExpenseLayoutProps) {
   return (
     <div className="mt-6 grid min-w-0 gap-6">
@@ -841,6 +939,7 @@ export function CategoriesFirstLayout({
           transactions={transactions}
           txLoading={txLoading}
           displayMode={displayMode}
+          transactionInteraction={transactionInteraction}
           loadingMore={loadingMore}
           page={page}
           totalPages={totalPages}
@@ -853,6 +952,7 @@ export function CategoriesFirstLayout({
           onEditTransaction={onEditTransaction}
           onDeleteTransaction={onDeleteTransaction}
           onCreateRecurring={onCreateRecurring}
+          onSelectTransaction={onSelectTransaction}
         />
       </section>
     </div>

@@ -112,10 +112,10 @@ export function getServerDefaultSortSnapshot(): DefaultSort {
 }
 
 // ─── Default Page Size ────────────────────────────────────────────────────────
-export type DefaultPageSize = 25 | 50 | 100;
+export type DefaultPageSize = 10 | 25 | 50 | 100;
 const DEFAULT_PAGE_SIZE_KEY = "mybudget-page-size";
 const DEFAULT_PAGE_SIZE_EVENT = "mybudget-page-size-change";
-const VALID_SIZES: DefaultPageSize[] = [25, 50, 100];
+const VALID_SIZES: DefaultPageSize[] = [10, 25, 50, 100];
 
 export function getDefaultPageSize(): DefaultPageSize {
   const userId = getCurrentUserIdSync();

@@ -131,7 +131,7 @@ export const api = {
           categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
           dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" | "MMM D";
           budgetBehavior?: "carry_forward" | "manual";
-          pageSize?: 25 | 50 | 100;
+          pageSize?: 10 | 25 | 50 | 100;
           defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
           defaultCategorySort?:
             | "manual"
@@ -143,6 +143,7 @@ export const api = {
             | "name_desc";
           defaultAmountVisibility?: "show" | "hide";
           autoHideOnStartup?: boolean;
+          transactionInteraction?: "floating" | "inline";
         };
       }>,
     update: (body: {
@@ -151,7 +152,7 @@ export const api = {
       categoryIndicatorStyle?: "bar_dot" | "bar" | "dot" | "minimal";
       dateFormat?: "MM/DD/YYYY" | "DD/MM/YYYY" | "YYYY-MM-DD" | "MMM D";
       budgetBehavior?: "carry_forward" | "manual";
-      pageSize?: 25 | 50 | 100;
+      pageSize?: 10 | 25 | 50 | 100;
       defaultSort?: "date_desc" | "date_asc" | "amount_desc" | "amount_asc";
       defaultCategorySort?:
         | "manual"
@@ -163,6 +164,7 @@ export const api = {
         | "name_desc";
       defaultAmountVisibility?: "show" | "hide";
       autoHideOnStartup?: boolean;
+      transactionInteraction?: "floating" | "inline";
     }) =>
       authorizedFetch("/api/preferences", { method: "PUT", body: JSON.stringify(body) }),
   },

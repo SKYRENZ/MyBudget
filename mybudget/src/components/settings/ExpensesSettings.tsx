@@ -36,6 +36,12 @@ import {
   subscribeTransactionDisplayMode,
   updateTransactionDisplayMode,
   type TransactionDisplayMode,
+  getTransactionInteraction,
+  getTransactionInteractionSnapshot,
+  getServerTransactionInteractionSnapshot,
+  subscribeTransactionInteraction,
+  updateTransactionInteraction,
+  type TransactionInteraction,
 } from "@/lib/transaction-preferences";
 
 const LAYOUT_LABELS: Record<ExpenseLayout, string> = {
@@ -50,7 +56,7 @@ const SORT_OPTIONS: { value: DefaultSort; label: string }[] = [
   { value: "amount_asc", label: "Lowest Amount" },
 ];
 
-const PAGE_SIZES: DefaultPageSize[] = [25, 50, 100];
+const PAGE_SIZES: DefaultPageSize[] = [10, 25, 50, 100];
 
 export function ExpensesSettings() {
   const layout = useSyncExternalStore(
@@ -78,6 +84,11 @@ export function ExpensesSettings() {
     getDefaultCategorySortSnapshot,
     getServerDefaultCategorySortSnapshot,
   );
+  const transactionInteraction = useSyncExternalStore(
+    subscribeTransactionInteraction,
+    getTransactionInteractionSnapshot,
+    getServerTransactionInteractionSnapshot,
+  );
 
   // Fallback reads for initial render (SSR returns defaults; client useSyncExternalStore takes over)
   const resolvedLayout = layout ?? getExpenseLayout();
@@ -85,6 +96,7 @@ export function ExpensesSettings() {
   const resolvedSort = defaultSort ?? getDefaultSort();
   const resolvedSize = pageSize ?? getDefaultPageSize();
   const resolvedCategorySort = defaultCategorySort ?? getDefaultCategorySort();
+  const resolvedInteraction = transactionInteraction ?? getTransactionInteraction();
 
   return (
     <div className="grid gap-6">
@@ -160,7 +172,7 @@ export function ExpensesSettings() {
         </p>
         <fieldset className="mt-2">
           <legend className="sr-only">Transactions per page</legend>
-          <div className="grid grid-cols-3 border border-ink/15 dark:border-white/10">
+          <div className="grid grid-cols-4 border border-ink/15 dark:border-white/10">
             {PAGE_SIZES.map((size, i) => (
               <button
                 key={size}
@@ -242,6 +254,41 @@ export function ExpensesSettings() {
         </div>
         <p className="mt-2 text-xs leading-relaxed text-ink-soft dark:text-[#cfc2af]">
           This determines how categories are displayed when opening the Expenses page.
+        </p>
+      </section>
+
+      {/* Transaction Interaction */}
+      <section>
+        <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-ink-soft dark:text-[#cfc2af]">
+          Transaction Interaction
+        </p>
+        <p className="mt-1 text-xs text-ink-soft dark:text-[#cfc2af]">
+          How transaction details open when you tap a row.
+        </p>
+        <fieldset className="mt-2">
+          <legend className="sr-only">Transaction interaction mode</legend>
+          <div className="grid grid-cols-2 border border-ink/15 dark:border-white/10">
+            {(["floating", "inline"] as TransactionInteraction[]).map((opt, i) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  updateTransactionInteraction(opt);
+                  void api.preferences.update({ transactionInteraction: opt }).catch(() => {});
+                }}
+                className={`py-3 text-sm font-bold transition-colors ${i > 0 ? "border-l border-ink/15 dark:border-white/10" : ""} ${
+                  resolvedInteraction === opt
+                    ? "bg-ink text-paper dark:bg-[#f7eddd] dark:text-[#17120f]"
+                    : "text-ink-soft hover:text-ink dark:text-[#cfc2af] dark:hover:text-white"
+                }`}
+              >
+                {opt === "floating" ? "Detail Card" : "Inline Expand"}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <p className="mt-2 text-xs leading-relaxed text-ink-soft dark:text-[#cfc2af]">
+          Detail Card opens a floating sheet. Inline Expand shows details in the list.
         </p>
       </section>
     </div>

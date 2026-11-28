@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
-import { formatDisplayDate, useDateFormat } from "@/lib/app-preferences";
 import {
   MonthlyCashFlowChart,
   type DailyCashFlowPoint,
@@ -51,7 +50,6 @@ type DashboardData = {
 export function DashboardPage() {
   useHideAmounts();
   usePrivacyConfig();
-  const dateFormat = useDateFormat();
   const [data, setData] = useState<DashboardData | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -349,8 +347,8 @@ export function DashboardPage() {
             </div>
           </section>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-3">
-            <section className="border border-ink/15 bg-paper p-5 lg:col-span-2 dark:border-white/10 dark:bg-[#211b17]">
+          <div className="mt-5 grid min-w-0 gap-4 lg:grid-cols-3">
+            <section className="min-w-0 border border-ink/15 bg-paper p-5 lg:col-span-2 dark:border-white/10 dark:bg-[#211b17]">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="font-display text-xl font-bold">Recent transactions</h2>
                 <Link
@@ -365,20 +363,17 @@ export function DashboardPage() {
                   No transactions recorded this month.
                 </p>
               ) : (
-                <ul className="mt-4 divide-y divide-ink/10 dark:divide-white/10">
+                <ul className="mt-4 min-w-0 divide-y divide-ink/10 dark:divide-white/10">
                   {transactions.slice(0, 10).map((item, index) => (
                     <li
                       key={item.id}
-                      className={`flex items-center justify-between gap-4 py-3 ${
+                      className={`flex min-w-0 items-center justify-between gap-3 py-3 ${
                         index >= 5 ? "hidden lg:flex" : ""
                       }`}
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">
                           {item.description || item.type}
-                        </p>
-                        <p className="mt-1 truncate text-xs text-ink-soft dark:text-[#cfc2af]">
-                          {item.categories?.name || "Uncategorized"} · {formatDisplayDate(item.transaction_date, dateFormat)}
                         </p>
                       </div>
                       <p
