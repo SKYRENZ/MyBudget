@@ -3,6 +3,7 @@
 import { Suspense, type FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { api, clearLegacyAuthStorage } from "@/lib/api";
 import { AccentBars } from "@/components/landing/AccentBars";
 
@@ -13,6 +14,8 @@ function AuthForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [retypePassword, setRetypePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRetypePassword, setShowRetypePassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -112,9 +115,53 @@ function AuthForm() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Username</span><input value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" required className="mt-2 w-full border border-ink/20 bg-cream px-4 py-3 text-sm outline-none focus:border-ember-deep" /></label>
-          <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Password</span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={6} className="mt-2 w-full border border-ink/20 bg-cream px-4 py-3 text-sm outline-none focus:border-ember-deep" /></label>
+          <label className="block">
+            <span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Password</span>
+            <div className="relative mt-2">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                required
+                minLength={6}
+                className="w-full border border-ink/20 bg-cream py-3 pl-4 pr-11 text-sm outline-none focus:border-ember-deep"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-soft transition-colors hover:text-ink"
+              >
+                {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+              </button>
+            </div>
+          </label>
           {mode === "signup" ? (
-            <label className="block"><span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Retype Password</span><input type="password" value={retypePassword} onChange={(event) => setRetypePassword(event.target.value)} autoComplete="new-password" required minLength={6} className="mt-2 w-full border border-ink/20 bg-cream px-4 py-3 text-sm outline-none focus:border-ember-deep" /></label>
+            <label className="block">
+              <span className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-ink-soft">Retype Password</span>
+              <div className="relative mt-2">
+                <input
+                  type={showRetypePassword ? "text" : "password"}
+                  value={retypePassword}
+                  onChange={(event) => setRetypePassword(event.target.value)}
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  className="w-full border border-ink/20 bg-cream py-3 pl-4 pr-11 text-sm outline-none focus:border-ember-deep"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRetypePassword((prev) => !prev)}
+                  aria-label={showRetypePassword ? "Hide retyped password" : "Show retyped password"}
+                  aria-pressed={showRetypePassword}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-soft transition-colors hover:text-ink"
+                >
+                  {showRetypePassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+                </button>
+              </div>
+            </label>
           ) : null}
 
           {error ? <p className="border border-red-700/20 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p> : null}

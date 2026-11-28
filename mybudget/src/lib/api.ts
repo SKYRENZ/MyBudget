@@ -12,7 +12,28 @@ export function clearLegacyAuthStorage() {
   }
 }
 
-async function authorizedFetch(path: string, init?: RequestInit) {
+let pendingSessionRefresh: Promise<boolean> | null = null;
+
+async function refreshSessionOnce(): Promise<boolean> {
+  if (!pendingSessionRefresh) {
+    pendingSessionRefresh = fetch("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
+      .then(async (res) => {
+        if (!res.ok) return false;
+        const data = (await res.json().catch(() => null)) as { authenticated?: boolean } | null;
+        return Boolean(data?.authenticated);
+      })
+      .catch(() => false)
+      .finally(() => {
+        pendingSessionRefresh = null;
+      });
+  }
+  return pendingSessionRefresh;
+}
+
+async function authorizedFetch(path: string, init?: RequestInit, hasRetried = false) {
   const response = await fetch(path, {
     ...init,
     cache: "no-store",
@@ -26,6 +47,12 @@ async function authorizedFetch(path: string, init?: RequestInit) {
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     if (response.status === 401) {
+      if (!hasRetried && path !== "/api/auth/session") {
+        const refreshed = await refreshSessionOnce();
+        if (refreshed) {
+          return authorizedFetch(path, init, true);
+        }
+      }
       if (
         typeof window !== "undefined" &&
         window.location.pathname !== "/auth" &&
