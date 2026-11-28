@@ -77,6 +77,23 @@ export const api = {
       }>,
     logout: () => authorizedFetch("/api/auth/logout", { method: "POST" }),
   },
+  account: {
+    update: (body: { username?: string; full_name?: string }) =>
+      authorizedFetch("/api/account", { method: "PUT", body: JSON.stringify(body) }) as Promise<{
+        id: string;
+        username: string;
+        full_name: string | null;
+      }>,
+    changePassword: (body: {
+      currentPassword: string;
+      newPassword: string;
+      confirmPassword: string;
+    }) =>
+      authorizedFetch("/api/account/password", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }) as Promise<{ ok: boolean; message: string }>,
+  },
   profile: {
     get: () =>
       authorizedFetch("/api/profile") as Promise<{
